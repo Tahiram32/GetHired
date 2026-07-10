@@ -37,7 +37,14 @@ function App() {
   }, []);
   // Tracker State
   type TrackerJob = { title: string, company: string, status: 'Applied' | 'Interviewing' | 'Offers' };
-  const [trackerJobs, setTrackerJobs] = useState<TrackerJob[]>([]);
+  const [trackerJobs, setTrackerJobs] = useState<TrackerJob[]>(() => {
+    const saved = localStorage.getItem("gethired_tracker_jobs");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem("gethired_tracker_jobs", JSON.stringify(trackerJobs));
+  }, [trackerJobs]);
 
   // Interview Simulator State
   const [interviewRole, setInterviewRole] = useState("");
