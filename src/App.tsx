@@ -778,7 +778,10 @@ function App() {
               <div className={`nav-item ${activeTab === 'admin' ? 'active' : ''}`} onClick={() => setActiveTab('admin')}>👑 Maker Portal</div>
             </>
           )}
-          <div className={`nav-item ${activeTab === 'upskill' ? 'active' : ''}`} onClick={() => setActiveTab('upskill')}>🔥 Skill Gaps</div>
+          <div className="nav-item" style={{ opacity: 0.5, cursor: 'not-allowed', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} title="Coming Soon">
+            <span>🔥 Skill Gaps</span>
+            <span style={{ fontSize: '0.65rem', background: 'var(--warning)', color: 'black', padding: '0.2rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>COMING SOON</span>
+          </div>
         </div>
         <div style={{ padding: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
