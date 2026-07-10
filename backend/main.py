@@ -571,6 +571,11 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
             
             api_jobs = api_jobs[:15]
             unverified_jobs = unverified_jobs[:5]
+        except HTTPException as he:
+            if he.status_code == 400 and "SerpAPI key" in he.detail:
+                return {"status": "error", "code": "MISSING_SERPAPI_KEY", "message": "Action Required: SerpAPI Key Missing. Please enter your key below to unlock the job feed."}
+            else:
+                print("HTTPException during SerpAPI:", he)
         except Exception as e:
             print("SerpAPI failed:", e)
 

@@ -71,6 +71,7 @@ function App() {
   const [searchStart, setSearchStart] = useState(0);
   const [locationError, setLocationError] = useState("");
   const [roleError, setRoleError] = useState("");
+  const [missingSerpKeyError, setMissingSerpKeyError] = useState(false);
 
   const fetchJobs = async (q: string = "", l: string = "", start: number = 0) => {
     setJobsLoading(true);
@@ -78,6 +79,12 @@ function App() {
     try {
       const res = await fetch(`http://localhost:8001/api/jobs?q=${encodeURIComponent(q)}&l=${encodeURIComponent(l)}&start=${start}`);
       const data = await res.json();
+      if (data.code === "MISSING_SERPAPI_KEY") {
+        setMissingSerpKeyError(true);
+      } else {
+        setMissingSerpKeyError(false);
+      }
+      
       if (data.status === "success") {
         if (start === 0) {
           setMockJobs(data.jobs);
@@ -409,6 +416,27 @@ function App() {
 
       
       case 'feed':
+        if (missingSerpKeyError) {
+          return (
+            <div className="tab-content animate-fade-in glass-panel" style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
+              <h2 style={{ color: 'var(--danger)', marginBottom: '1rem' }}>Action Required: SerpAPI Key Missing</h2>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Please enter your key below to unlock the job feed.</p>
+              <div style={{ maxWidth: '400px', margin: '0 auto', textAlign: 'left' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>SerpAPI Key (Google Jobs)</label>
+                <input type="password" value={settingsSerp} onChange={e => setSettingsSerp(e.target.value)} className="glass-input" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', marginBottom: '1rem' }} placeholder="sk_..." />
+                <button className="btn btn-primary" style={{ width: '100%', padding: '0.8rem', background: settingsSaved ? 'var(--success)' : 'var(--primary)', color: 'white' }} onClick={async () => {
+                    await saveSettings();
+                    setMissingSerpKeyError(false);
+                    fetchJobs(searchRole, searchLoc);
+                }}>
+                  {settingsSaved ? "✅ Saved Successfully!" : "Save Key & Retry Search"}
+                </button>
+              </div>
+            </div>
+          );
+        }
+        
         return (
           <div className="animate-fade-in">
             <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>Live <span className="text-gradient">Job Feed</span></h1>
