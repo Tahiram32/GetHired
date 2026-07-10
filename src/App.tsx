@@ -158,7 +158,7 @@ function App() {
     setScorecardError(false);
     
     const totalChars = sessionData.reduce((acc, curr) => acc + curr.answer.length, 0);
-    if (totalChars < 50) {
+    if (totalChars < 300) {
         setScorecard({
             top_strength: "Needs more data",
             biggest_blind_spot: "Short answers",
@@ -617,9 +617,27 @@ function App() {
                       <h3 style={{ color: 'var(--text-secondary)' }}>Analyzing your performance and generating your coaching scorecard...</h3>
                     </div>
                   ) : scorecardError ? (
-                    <div style={{ padding: '2rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--danger)', borderRadius: '8px' }}>
-                      <h3 style={{ color: 'var(--danger)', marginBottom: '1rem' }}>⚠️ Network Error</h3>
-                      <p style={{ marginBottom: '1.5rem' }}>We could not reach the server to generate your scorecard. Don't worry, your practice wasn't wasted, but we couldn't analyze the aggregate trends right now.</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', textAlign: 'left' }}>
+                      <div style={{ padding: '2rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--danger)', borderRadius: '8px' }}>
+                        <h3 style={{ color: 'var(--danger)', marginBottom: '1rem' }}>⚠️ API Connection Failed</h3>
+                        <p style={{ marginBottom: '1.5rem', lineHeight: '1.6' }}>We could not reach the server to generate your coaching scorecard due to a network timeout.</p>
+                        <button className="btn btn-primary" style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={generateScorecard}>
+                          🔄 Retry Connection
+                        </button>
+                      </div>
+                      
+                      <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '8px' }}>
+                        <h3 style={{ marginBottom: '1rem', color: 'var(--accent-primary)' }}>Your Raw Transcript</h3>
+                        <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>You can copy your answers below to review them manually or save them for your notes.</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                          {sessionData.map((item, idx) => (
+                            <div key={idx} style={{ background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '6px', borderLeft: '3px solid var(--border-subtle)' }}>
+                              <strong style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Q{idx + 1}: {item.question}</strong>
+                              <p style={{ whiteSpace: 'pre-line', lineHeight: '1.5' }}>{item.answer}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   ) : scorecard && (
                     <>
