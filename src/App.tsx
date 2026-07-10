@@ -359,6 +359,7 @@ function App() {
   const [settingsSerp, setSettingsSerp] = useState("");
   const [settingsOpenAI, setSettingsOpenAI] = useState("");
   const [settingsSaved, setSettingsSaved] = useState(false);
+  const [settingsError, setSettingsError] = useState("");
 
   React.useEffect(() => {
     if (activeTab === 'settings') {
@@ -372,18 +373,30 @@ function App() {
     }
   }, [activeTab]);
 
-  const saveSettings = async () => {
+  const saveSettings = async (): Promise<boolean> => {
+    setSettingsError("");
+    setSettingsSaved(false);
     const payload: any = {};
     if (settingsSerp && settingsSerp !== "********") payload.serpapi_key = settingsSerp;
     if (settingsOpenAI && settingsOpenAI !== "********") payload.openai_key = settingsOpenAI;
     
-    await fetch("http://localhost:8001/api/config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
-    setSettingsSaved(true);
-    setTimeout(() => setSettingsSaved(false), 2000);
+    try {
+      const res = await fetch("http://localhost:8001/api/config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        setSettingsError("⚠️ Failed to save configuration to local drive.");
+        return false;
+      }
+      setSettingsSaved(true);
+      setTimeout(() => setSettingsSaved(false), 3000);
+      return true;
+    } catch (e) {
+      setSettingsError("⚠️ Failed to save configuration to local drive.");
+      return false;
+    }
   };
 
   const renderContent = () => {
@@ -408,6 +421,7 @@ function App() {
               <input type="password" value={settingsOpenAI} onChange={e => setSettingsOpenAI(e.target.value)} className="glass-input" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px' }} placeholder="sk-..." />
             </div>
 
+            {settingsError && <div style={{ color: 'var(--danger)', marginBottom: '1rem', fontWeight: 'bold' }}>{settingsError}</div>}
             <button className="btn btn-primary" style={{ width: '100%', padding: '1rem', background: settingsSaved ? 'var(--success)' : 'var(--primary)', color: 'white' }} onClick={saveSettings}>
               {settingsSaved ? "✅ Saved Successfully!" : "Save Keys Securely"}
             </button>
@@ -425,10 +439,13 @@ function App() {
               <div style={{ maxWidth: '400px', margin: '0 auto', textAlign: 'left' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>SerpAPI Key (Google Jobs)</label>
                 <input type="password" value={settingsSerp} onChange={e => setSettingsSerp(e.target.value)} className="glass-input" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', marginBottom: '1rem' }} placeholder="sk_..." />
+                {settingsError && <div style={{ color: 'var(--danger)', marginBottom: '1rem', fontWeight: 'bold' }}>{settingsError}</div>}
                 <button className="btn btn-primary" style={{ width: '100%', padding: '0.8rem', background: settingsSaved ? 'var(--success)' : 'var(--primary)', color: 'white' }} onClick={async () => {
-                    await saveSettings();
-                    setMissingSerpKeyError(false);
-                    fetchJobs(searchRole, searchLoc);
+                    const success = await saveSettings();
+                    if (success) {
+                      setMissingSerpKeyError(false);
+                      fetchJobs(searchRole, searchLoc);
+                    }
                 }}>
                   {settingsSaved ? "✅ Saved Successfully!" : "Save Key & Retry Search"}
                 </button>
