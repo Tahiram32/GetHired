@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { LOCATIONS, type Location } from '../data/locations';
+import Fuse from 'fuse.js';
 
 interface LocationAutocompleteProps {
   value: string;
@@ -7,6 +8,13 @@ interface LocationAutocompleteProps {
   placeholder?: string;
   onEnter?: () => void;
 }
+
+
+const fuse = new Fuse(LOCATIONS, {
+  keys: ['city', 'state', 'label'],
+  threshold: 0.3,
+  ignoreLocation: true
+});
 
 export function LocationAutocomplete({ value, onChange, placeholder = "City, State or Remote", onEnter }: LocationAutocompleteProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,10 +36,7 @@ export function LocationAutocomplete({ value, onChange, placeholder = "City, Sta
   const filteredLocations = useMemo(() => {
     if (!value) return LOCATIONS.slice(0, 50); // Show top 50 by default when empty
     
-    const lowerValue = value.toLowerCase();
-    return LOCATIONS.filter(loc => 
-      loc.label.toLowerCase().includes(lowerValue)
-    ).slice(0, 50); // Limit to top 50 matches for performance
+    return fuse.search(value).slice(0, 50).map(result => result.item);
   }, [value]);
 
   const handleSelect = (location: Location) => {
