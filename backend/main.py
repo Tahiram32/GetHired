@@ -277,7 +277,7 @@ async def get_interview_questions(role: str = "Software Engineer"):
     if not client:
         return {"status": "error", "message": "OpenAI client not configured."}
     
-    system_instruction = "You are a ruthless technical interviewer from a top-tier tech company. The user is interviewing for the role provided. Generate exactly 5 extremely difficult, highly-specific behavioral and technical interview questions for this specific role. Do NOT give generic questions. Make them situational and challenging."
+    system_instruction = "You are a strict, professional hiring manager. Generate exactly 5 short, realistic interview questions for the provided role. Real interviews are dynamic back-and-forths, not massive paragraphs. Keep each question to a single sentence or two. Make them situational and challenging."
     
     try:
         response = client.beta.chat.completions.parse(
@@ -292,6 +292,40 @@ async def get_interview_questions(role: str = "Software Engineer"):
         return {
             "status": "success",
             "questions": response.choices[0].message.parsed.questions
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+class InterviewFeedbackResult(BaseModel):
+    feedback: str
+
+@app.post("/api/interview-feedback")
+async def get_interview_feedback(question: str = Form(...), answer: str = Form(...)):
+    if not client:
+        return {"status": "error", "message": "OpenAI client not configured."}
+    
+    system_instruction = """
+    You are a strict, professional hiring manager. The user will provide an interview question and their text-based answer.
+    Analyze the substance of their answer. Provide harsh but constructive feedback focusing on the content, clarity, and completeness.
+    Do NOT comment on tone, pacing, or audio/video quality, as this is a text-based exercise.
+    Advise them on how to improve their answer, for example by using the STAR method (Situation, Task, Action, Result) if they forgot to give specific examples.
+    Keep your feedback concise, actionable, and in the voice of a hiring manager.
+    """
+    
+    try:
+        response = client.beta.chat.completions.parse(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": f"Question: {question}\n\nAnswer: {answer}"}
+            ],
+            response_format=InterviewFeedbackResult,
+            temperature=0.7
+        )
+        return {
+            "status": "success",
+            "feedback": response.choices[0].message.parsed.feedback
         }
     except Exception as e:
         return {"status": "error", "message": str(e)}

@@ -123,15 +123,43 @@ function App() {
 
   // Interview Simulator State
   const [interviewRole, setInterviewRole] = useState("");
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [streamActive, setStreamActive] = useState(false);
   const [questionIndex, setQuestionIndex] = useState(0);
 
   const [interviewQuestions, setInterviewQuestions] = useState<string[]>([
     "Loading customized interview questions for your role..."
   ]);
   const [questionsLoading, setQuestionsLoading] = useState(false);
+
+  const [userAnswer, setUserAnswer] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
+
+  const submitAnswer = async () => {
+    if (!userAnswer.trim()) return;
+    setIsSubmittingAnswer(true);
+    setFeedback("");
+    const formData = new FormData();
+    formData.append("question", interviewQuestions[questionIndex]);
+    formData.append("answer", userAnswer);
+    try {
+      const response = await fetch("http://localhost:8001/api/interview-feedback", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setFeedback(data.feedback);
+      } else {
+        alert("Error: " + data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error getting feedback.");
+    } finally {
+      setIsSubmittingAnswer(false);
+    }
+  };
+
 
   const fetchInterviewQuestions = async (roleOverride?: string) => {
     setQuestionsLoading(true);
@@ -150,31 +178,8 @@ function App() {
     }
   };
 
-  const startWebcam = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setStreamActive(true);
-      }
-    } catch (err) {
-      alert("Could not access webcam. Please ensure permissions are granted.");
-    }
-  };
-
-  const stopWebcam = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach((track: any) => track.stop());
-      setStreamActive(false);
-      setIsRecording(false);
-    }
-  };
-  
   React.useEffect(() => {
-    if (activeTab !== 'interview') {
-      stopWebcam();
-    } else if (interviewQuestions.length === 1 && interviewQuestions[0].includes("Loading")) {
+    if (activeTab === 'interview' && interviewQuestions.length === 1 && interviewQuestions[0].includes("Loading")) {
       fetchInterviewQuestions();
     }
   }, [activeTab]);
@@ -545,69 +550,53 @@ function App() {
                 {questionsLoading ? "Generating..." : "Generate Specific Questions"}
               </button>
             </div>
-            <div className="dashboard-grid" style={{ marginTop: 0 }}>
-              <div className="glass-panel" style={{ padding: '1rem', height: '400px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                <div style={{ background: '#000', flex: 1, borderRadius: '8px', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
-                  {!streamActive && (
-                    <button className="btn btn-primary" onClick={startWebcam} style={{ position: 'absolute', zIndex: 10 }}>📷 Enable Webcam</button>
-                  )}
-                  <video 
-                    ref={videoRef} 
-                    autoPlay 
-                    muted 
-                    playsInline 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)', opacity: streamActive ? 1 : 0 }} 
-                  />
-                  {isRecording && (
-                    <div className="pulse-dot" style={{ position: 'absolute', top: '1rem', right: '1rem', width: '12px', height: '12px', background: 'red', borderRadius: '50%', boxShadow: '0 0 10px red' }}></div>
-                  )}
-                </div>
-                <div style={{ padding: '1rem 0 0 0', display: 'flex', gap: '1rem' }}>
-                  <button 
-                    className={`btn ${isRecording ? 'btn-danger' : 'btn-primary'}`} 
-                    style={{ flex: 1, background: isRecording ? '#EF4444' : undefined }}
-                    onClick={() => {
-                        if (!streamActive) { alert("Please enable your webcam first."); return; }
-                        setIsRecording(!isRecording);
-                    }}
-                  >
-                    {isRecording ? "⏹️ Stop Recording" : "🎙️ Start Speaking"}
-                  </button>
-                  {streamActive && (
-                    <button className="btn btn-secondary" onClick={stopWebcam} style={{ color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
-                      🚫 Stop Camera
-                    </button>
-                  )}
-                  <button 
-                    className="btn btn-secondary" 
-                    onClick={() => {
-                      if (questionIndex + 1 >= interviewQuestions.length - 1) {
-                          fetchInterviewQuestions();
-                      }
-                      setQuestionIndex((prev) => prev + 1);
-                    }} 
-                    disabled={questionsLoading && questionIndex === interviewQuestions.length - 1}
-                  >
-                    {questionsLoading && questionIndex === interviewQuestions.length - 1 ? "Generating AI Questions..." : "Next Question ➡️"}
-                  </button>
-                </div>
+            <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: 0 }}>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+                <h3 style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>Question {questionIndex + 1} of {interviewQuestions.length}</h3>
+                <p style={{ fontSize: '1.2rem', lineHeight: '1.5' }}>{interviewQuestions[questionIndex]}</p>
               </div>
-              <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <h3>Confidence Coach</h3>
-                {isRecording ? (
-                  <div className="animate-fade-in" style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--success)' }}>🟢 Analyzing your speech and body language... You are doing great!</p>
-                  </div>
-                ) : (
-                  <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Click "Start Speaking" to begin your mock interview. The AI will provide feedback on your pacing, tone, and confidence.</p>
-                  </div>
-                )}
-                <div style={{ marginTop: 'auto' }}>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Current Question {questionIndex + 1} of {interviewQuestions.length}:</p>
-                  <p style={{ fontStyle: 'italic', fontSize: '1.1rem', color: 'var(--text-primary)' }}>"{interviewQuestions[questionIndex]}"</p>
-                </div>
+
+              <div>
+                <textarea 
+                  className="input-field" 
+                  style={{ minHeight: '150px', resize: 'vertical' }} 
+                  placeholder="Type your answer here, or use your OS dictation tool to speak your response..."
+                  value={userAnswer}
+                  onChange={(e) => setUserAnswer(e.target.value)}
+                />
               </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ flex: 1 }}
+                  onClick={submitAnswer}
+                  disabled={isSubmittingAnswer || !userAnswer.trim()}
+                >
+                  {isSubmittingAnswer ? "Analyzing..." : "Submit Answer"}
+                </button>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => {
+                    if (questionIndex + 1 >= interviewQuestions.length - 1) {
+                        fetchInterviewQuestions();
+                    }
+                    setQuestionIndex((prev) => prev + 1);
+                    setUserAnswer("");
+                    setFeedback("");
+                  }} 
+                  disabled={questionsLoading && questionIndex === interviewQuestions.length - 1}
+                >
+                  {questionsLoading && questionIndex === interviewQuestions.length - 1 ? "Generating..." : "Next Question ➡️"}
+                </button>
+              </div>
+
+              {feedback && (
+                <div className="animate-fade-in" style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)', marginTop: '1rem' }}>
+                  <h3 style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>Hiring Manager Feedback</h3>
+                  <p style={{ fontSize: '1rem', lineHeight: '1.6', whiteSpace: 'pre-line' }}>{feedback}</p>
+                </div>
+              )}
             </div>
           </div>
         );
