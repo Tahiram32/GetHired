@@ -277,8 +277,7 @@ function App() {
               <h4 style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>💡 How to use this engine:</h4>
               <ul style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <li><strong>Step 1:</strong> Upload your main PDF resume. It helps if it includes all your past work experience so the AI has plenty of material to pull from!</li>
-                <li><strong>Step 2:</strong> Paste the link to the job posting. If the AI can't read the link, you can always just copy and paste the text instead!</li>
-                <li><strong>Step 3:</strong> The AI will cross-reference them. Note: If you paste "?" or incomplete text, the AI will not find any keywords and will return a 0% match!</li>
+                <li><strong>Step 2:</strong> Paste the full text of the target job description. The AI will cross-reference them and rewrite your bullets to highlight the exact keywords the ATS filter is looking for!</li>
               </ul>
             </div>
             
