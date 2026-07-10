@@ -225,32 +225,35 @@ def get_serpapi_key():
     return api_key
 
 class SettingsUpdate(BaseModel):
-    openai_key: str
-    serpapi_key: str
+    openai_key: Optional[str] = None
+    serpapi_key: Optional[str] = None
 
-@app.get("/api/settings")
-async def get_settings():
+@app.get("/api/config")
+async def get_config_alias():
     keys = get_keys()
     return {
         "has_openai": bool(keys.get("openai_key")),
         "has_serpapi": bool(keys.get("serpapi_key"))
     }
 
-@app.post("/api/settings")
-async def update_settings(settings: SettingsUpdate):
-    try:
-        temp_client = OpenAI(api_key=settings.openai_key)
-        temp_client.models.list()
-    except openai.AuthenticationError:
-        raise HTTPException(status_code=401, detail="Invalid API Key. Please double check your OpenAI key.")
-    except openai.RateLimitError:
-        raise HTTPException(status_code=429, detail="API Quota Exceeded. Please ensure you have added a $5 minimum balance to your OpenAI account.")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
+@app.post("/api/config")
+async def update_config_alias(settings: SettingsUpdate):
     keys = get_keys()
-    keys["openai_key"] = settings.openai_key
-    keys["serpapi_key"] = settings.serpapi_key
+    
+    if settings.openai_key:
+        try:
+            temp_client = OpenAI(api_key=settings.openai_key)
+            temp_client.models.list()
+            keys["openai_key"] = settings.openai_key
+        except openai.AuthenticationError:
+            raise HTTPException(status_code=401, detail="Invalid API Key. Please double check your OpenAI key.")
+        except openai.RateLimitError:
+            raise HTTPException(status_code=429, detail="API Quota Exceeded. Please ensure you have added a $5 minimum balance to your OpenAI account.")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+            
+    if settings.serpapi_key:
+        keys["serpapi_key"] = settings.serpapi_key
     
     with open(CONFIG_FILE, "w") as f:
         json.dump(keys, f)
