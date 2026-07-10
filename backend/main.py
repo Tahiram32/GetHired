@@ -12,9 +12,66 @@ from openai import OpenAI
 from pydantic import BaseModel, Field
 from typing import List
 
-load_dotenv()
-
 app = FastAPI(title="GetHired API")
+
+import platform
+import json
+
+def get_app_dir():
+    system = platform.system()
+    if system == "Windows":
+        base_dir = os.environ.get("APPDATA", os.path.expanduser("~"))
+        app_dir = os.path.join(base_dir, "GetHired")
+    elif system == "Darwin":
+        app_dir = os.path.expanduser("~/Library/Application Support/GetHired")
+    else:
+        app_dir = os.path.expanduser("~/.local/share/GetHired")
+    os.makedirs(app_dir, exist_ok=True)
+    return app_dir
+
+CONFIG_FILE = os.path.join(get_app_dir(), "config.json")
+DB_FILE = os.path.join(get_app_dir(), "gethired.db")
+
+def get_keys():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def get_openai_client():
+    keys = get_keys()
+    api_key = keys.get("openai_key")
+    if not api_key:
+        raise HTTPException(status_code=400, detail="OpenAI API key not configured")
+    return OpenAI(api_key=api_key)
+
+def get_serpapi_key():
+    keys = get_keys()
+    api_key = keys.get("serpapi_key")
+    if not api_key:
+        raise HTTPException(status_code=400, detail="SerpAPI key not configured")
+    return api_key
+
+class SettingsUpdate(BaseModel):
+    openai_key: str
+    serpapi_key: str
+
+@app.get("/api/settings")
+async def get_settings():
+    keys = get_keys()
+    return {
+        "has_openai": bool(keys.get("openai_key")),
+        "has_serpapi": bool(keys.get("serpapi_key"))
+    }
+
+@app.post("/api/settings")
+async def update_settings(settings: SettingsUpdate):
+    keys = get_keys()
+    keys["openai_key"] = settings.openai_key
+    keys["serpapi_key"] = settings.serpapi_key
+    with open(CONFIG_FILE, "w") as f:
+        json.dump(keys, f)
+    return {"status": "success"}
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,10 +80,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Set up OpenAI Client
-api_key = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=api_key) if api_key else None
 
 class AtsResult(BaseModel):
     ats_match_score: int = Field(description="The projected ATS match score between 0 and 100")
@@ -91,7 +144,7 @@ async def tailor_resume(
         Analyze the match and provide a JSON response with 'ats_match_score' and 'tailored_bullets'.
         """
 
-        response = client.beta.chat.completions.parse(
+        response = get_openai_client().beta.chat.completions.parse(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_instruction},
@@ -121,7 +174,7 @@ async def post_admin_job(job: Job):
         # Use AI to automatically fix formatting if it's a clumped copy-paste
         if client:
             system_instruction = "You are a professional technical recruiter. The user will provide a messy, clumped job description. Format it into beautiful, easy-to-read sections (e.g. The Role, Responsibilities, Requirements, Compensation) using clear spacing and bullet points (-). Do NOT use markdown bolding (**) or headers (##). Just use plain text with actual newline characters to separate sections."
-            response = client.chat.completions.create(
+            response = get_openai_client().chat.completions.create(
                 model="gpt-4o",
                 messages=[
                     {"role": "system", "content": system_instruction},
@@ -249,7 +302,7 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
     
             prompt = f"Raw Scraped Jobs: {json.dumps(api_jobs, indent=2)}"
     
-            response = client.beta.chat.completions.parse(
+            response = get_openai_client().beta.chat.completions.parse(
                 model="gpt-4o",
                 messages=[
                     {"role": "system", "content": system_instruction},
@@ -284,7 +337,7 @@ async def get_interview_questions(role: str = "Software Engineer"):
     system_instruction = "You are a strict, professional hiring manager. Generate exactly 5 short, realistic interview questions for the provided role, along with a 1-sentence hint for each to help a candidate who gets stuck. Real interviews are dynamic back-and-forths. Keep each question to a single sentence or two. Make them situational and challenging."
     
     try:
-        response = client.beta.chat.completions.parse(
+        response = get_openai_client().beta.chat.completions.parse(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_instruction},
@@ -317,7 +370,7 @@ async def get_interview_feedback(question: str = Form(...), answer: str = Form(.
     """
     
     try:
-        response = client.beta.chat.completions.parse(
+        response = get_openai_client().beta.chat.completions.parse(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_instruction},
@@ -354,7 +407,7 @@ async def generate_interview_scorecard(session_data: str = Form(...)):
     Provide a short coaching summary (2-3 sentences).
     """
     try:
-        response = client.beta.chat.completions.parse(
+        response = get_openai_client().beta.chat.completions.parse(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_instruction},
@@ -392,7 +445,7 @@ async def generate_counter_offer(offer_details: str = Form(...)):
     4. Only output the email script itself. Do not include any meta-commentary.
     """
     try:
-        response = client.beta.chat.completions.parse(
+        response = get_openai_client().beta.chat.completions.parse(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_instruction},

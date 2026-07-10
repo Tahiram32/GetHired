@@ -33,15 +33,10 @@ GetHired uses AI and live search data to power the app. You need to give the app
 6. Copy the long string of text immediately (it starts with `sk-`). You will never be able to see it again!
 
 ### How to set them up in the app:
-1. Open the `gethired` folder you downloaded.
-2. Find the file named `env.example`.
-3. Open it in Notepad or TextEdit and replace the placeholder text with your actual keys:
-   ```text
-   OPENAI_API_KEY=sk-your_long_openai_key_here
-   SERPAPI_API_KEY=your_serpapi_api_key_here
-   ```
-4. Save the file.
-5. **CRITICAL STEP:** Rename the file from `env.example` to exactly `.env` (make sure there is a dot at the beginning and no `.txt` at the end).
+1. You do **not** need to touch any code or files!
+2. Simply launch the app (see Step 3 below).
+3. The very first time you open GetHired, you will see a secure "Welcome" screen asking for your keys.
+4. Paste your keys directly into the app. They will be encrypted and saved securely to your computer's permanent application folder (outside of the code folder).
 
 ---
 
@@ -80,9 +75,8 @@ The script will install everything and open the app in your browser automaticall
 ## 🔄 How to Update the App
 When we release new features or bug fixes, you don't want to lose your saved jobs or your API keys! To update safely:
 1. Download the newest ZIP file from GitHub and extract it into a brand new folder.
-2. Copy your `.env` file from your old folder and paste it into the new folder.
-3. (Coming Soon) If we add a database file for your saved jobs, you will copy that over as well. 
-4. Run the new `start_windows.bat` or `start_mac_linux.sh` file!
+2. Run the new `start_windows.bat` or `start_mac_linux.sh` file!
+3. That's it! Because we store your API keys and saved jobs safely in your operating system's permanent application folder (e.g., `%APPDATA%` on Windows or `~/Library/Application Support` on Mac), the new version of the app will instantly find your data and pick up exactly where you left off. You can safely delete the old app folder.
 
 ## 💡 What Can GetHired Do?
 
