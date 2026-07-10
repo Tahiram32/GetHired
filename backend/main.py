@@ -162,7 +162,7 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
         # Step 1: Pull live jobs from SerpAPI Google Jobs
         api_jobs = []
         try:
-            query = q.lower()
+            query = q.lower().strip() if q.strip() else "jobs"
             location = l.lower().strip()
             
             # Backend Safety Net: Reject empty location requests
@@ -196,7 +196,7 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
                     "company": company,
                     "location": loc,
                     "url": item.get("share_link", ""),
-                    "description_snippet": desc[:400] + "..."
+                    "description_snippet": desc[:2000] + "..."
                 })
             
             api_jobs = api_jobs[:15]
