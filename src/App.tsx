@@ -49,13 +49,25 @@ function App() {
   const [streamActive, setStreamActive] = useState(false);
   const [questionIndex, setQuestionIndex] = useState(0);
 
-  const interviewQuestions = [
-    "Tell me about a time you had to pivot quickly on a project.",
-    "Describe a situation where you disagreed with a coworker. How did you resolve it?",
-    "What is your greatest weakness, and how are you working to overcome it?",
-    "Tell me about a project you are most proud of and why.",
-    "How do you prioritize your work when you have multiple tight deadlines?"
-  ];
+  const [interviewQuestions, setInterviewQuestions] = useState<string[]>([
+    "Loading customized interview questions for your role..."
+  ]);
+  const [questionsLoading, setQuestionsLoading] = useState(false);
+
+  const fetchInterviewQuestions = async () => {
+    setQuestionsLoading(true);
+    try {
+      const response = await fetch(`http://localhost:8001/api/interview-questions?role=${encodeURIComponent(searchRole || 'Software Engineer')}`);
+      const data = await response.json();
+      if (data.status === "success" && data.questions.length > 0) {
+        setInterviewQuestions(prev => prev.length === 1 && prev[0].includes("Loading") ? data.questions : [...prev, ...data.questions]);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setQuestionsLoading(false);
+    }
+  };
 
   const startWebcam = async () => {
     try {
@@ -81,6 +93,8 @@ function App() {
   React.useEffect(() => {
     if (activeTab !== 'interview') {
       stopWebcam();
+    } else if (interviewQuestions.length === 1 && interviewQuestions[0].includes("Loading")) {
+      fetchInterviewQuestions();
     }
   }, [activeTab]);
   
@@ -419,7 +433,18 @@ function App() {
                       🚫 Stop Camera
                     </button>
                   )}
-                  <button className="btn btn-secondary" onClick={() => setQuestionIndex((prev) => (prev + 1) % interviewQuestions.length)}>Next Question ➡️</button>
+                  <button 
+                    className="btn btn-secondary" 
+                    onClick={() => {
+                      if (questionIndex + 1 >= interviewQuestions.length - 1) {
+                          fetchInterviewQuestions();
+                      }
+                      setQuestionIndex((prev) => prev + 1);
+                    }} 
+                    disabled={questionsLoading && questionIndex === interviewQuestions.length - 1}
+                  >
+                    {questionsLoading && questionIndex === interviewQuestions.length - 1 ? "Generating AI Questions..." : "Next Question ➡️"}
+                  </button>
                 </div>
               </div>
               <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>

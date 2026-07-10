@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from openai import OpenAI
 from pydantic import BaseModel, Field
+from typing import List
 
 load_dotenv()
 
@@ -235,6 +236,33 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
             "jobs": (admin_jobs if start == 0 else []) + [j.model_dump() for j in filtered_jobs]
         }
 
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+class InterviewQuestionsResult(BaseModel):
+    questions: List[str]
+
+@app.get("/api/interview-questions")
+async def get_interview_questions(role: str = "Software Engineer"):
+    if not client:
+        return {"status": "error", "message": "OpenAI client not configured."}
+    
+    system_instruction = "You are a ruthless technical interviewer from a top-tier tech company. The user is interviewing for the role provided. Generate exactly 5 extremely difficult, highly-specific behavioral and technical interview questions for this specific role. Do NOT give generic questions. Make them situational and challenging."
+    
+    try:
+        response = client.beta.chat.completions.parse(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": f"Role: {role}"}
+            ],
+            response_format=InterviewQuestionsResult,
+            temperature=0.7
+        )
+        return {
+            "status": "success",
+            "questions": response.choices[0].message.parsed.questions
+        }
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
