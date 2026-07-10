@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
 import pdfplumber
 import os
@@ -22,10 +22,28 @@ import threading
 import signal
 from fastapi import Request
 
+import secrets
+SHUTDOWN_TOKEN = secrets.token_hex(32)
+SHUTDOWN_TOKEN_FILE = os.path.join(get_app_dir(), "shutdown.token")
+with open(SHUTDOWN_TOKEN_FILE, "w") as f:
+    f.write(SHUTDOWN_TOKEN)
+
+if platform.system() == "Windows":
+    try:
+        import getpass
+        subprocess.run(['icacls', SHUTDOWN_TOKEN_FILE, '/inheritance:r', '/grant:r', f'{getpass.getuser()}:F'], check=False, capture_output=True)
+    except Exception:
+        pass
+else:
+    import stat
+    os.chmod(SHUTDOWN_TOKEN_FILE, stat.S_IRUSR | stat.S_IWUSR)
+
 @app.post("/api/shutdown")
-async def shutdown_server(request: Request):
+async def shutdown_server(request: Request, x_shutdown_token: str = Header(None)):
     if request.client.host not in ["127.0.0.1", "localhost", "::1"]:
         raise HTTPException(status_code=403, detail="Forbidden")
+    if x_shutdown_token != SHUTDOWN_TOKEN:
+        raise HTTPException(status_code=401, detail="Unauthorized")
     
     def kill_server():
         import time
@@ -59,6 +77,55 @@ def get_app_dir():
 
 CONFIG_FILE = os.path.join(get_app_dir(), "config.json")
 DB_FILE = os.path.join(get_app_dir(), "gethired.db")
+
+from sqlmodel import create_engine, SQLModel, Session, Field, select
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
+from typing import Optional
+
+sqlite_url = f"sqlite:///{DB_FILE}"
+engine = create_engine(sqlite_url, connect_args={"check_same_thread": False})
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
+class KanbanColumn(SQLModel, table=True):
+    __tablename__ = "kanban_columns"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+    order_index: int
+
+class TrackerJob(SQLModel, table=True):
+    __tablename__ = "tracker_jobs"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    title: str
+    company: str
+    location: str
+    url: Optional[str] = None
+    description: str
+    is_unverified: bool = False
+    column_id: int = Field(foreign_key="kanban_columns.id")
+
+def init_db():
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        # Seed default columns if empty
+        if not session.exec(select(KanbanColumn)).first():
+            defaults = [
+                KanbanColumn(name="Saved", order_index=0),
+                KanbanColumn(name="Applied", order_index=1),
+                KanbanColumn(name="Interviewing", order_index=2),
+                KanbanColumn(name="Offer", order_index=3),
+                KanbanColumn(name="Rejected", order_index=4)
+            ]
+            session.add_all(defaults)
+            session.commit()
+
+init_db()
+
 
 def get_keys():
     if os.path.exists(CONFIG_FILE):

@@ -7,7 +7,8 @@ echo ===================================================
 echo.
 
 echo [0/3] Cleaning up old processes...
-curl -X POST http://localhost:8001/api/shutdown >nul 2>nul
+set /p SHUTDOWN_TOKEN=<"%APPDATA%\GetHired\shutdown.token"
+curl -X POST http://localhost:8001/api/shutdown -H "x-shutdown-token: %SHUTDOWN_TOKEN%" >nul 2>nul
 timeout /t 2 /nobreak >nul
 FOR /F "tokens=5" %%T IN ('netstat -a -n -o ^| findstr :8001') DO (
     TaskKill /PID %%T /F >nul 2>nul
