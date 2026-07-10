@@ -1,6 +1,63 @@
 import React, { useState, useRef } from 'react';
 import './index.css';
 
+
+function JobCard({ job, onPass, onApply }: { job: any, onPass: () => void, onApply: () => void }) {
+  const [showWarning, setShowWarning] = useState(false);
+
+  return (
+    <>
+      <div className="glass-panel job-card animate-fade-in" style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.5rem' }}>
+          <h2 style={{ fontSize: '1.4rem', margin: 0 }}>{job.title}</h2>
+          {job.is_unverified && (
+            <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '1px solid #f59e0b', whiteSpace: 'nowrap', fontWeight: 'bold' }} title="AI could not scan this listing for scams because the API lacked structured requirements.">
+              ⚠️ Unverified
+            </span>
+          )}
+        </div>
+        <h4 style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.95rem' }}>{job.company} • {job.location}</h4>
+        <div style={{ color: 'var(--text-muted)', textAlign: 'left', marginBottom: '1.5rem', whiteSpace: 'pre-line', flex: 1, maxHeight: '120px', overflowY: 'auto', paddingRight: '0.5rem', lineHeight: '1.5', fontSize: '0.9rem' }}>
+          {job.description}
+        </div>
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-start' }}>
+          <button className="btn btn-secondary" style={{ color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.3)', padding: '0.5rem 1.5rem' }} onClick={onPass}>Pass ❌</button>
+          <button className="btn btn-primary" style={{ background: 'var(--success)', boxShadow: '0 4px 14px 0 rgba(16, 185, 129, 0.4)', padding: '0.5rem 1.5rem' }} onClick={() => {
+            if (job.is_unverified) {
+              setShowWarning(true);
+            } else {
+              onApply();
+            }
+          }}>Apply ✅</button>
+        </div>
+      </div>
+
+      {showWarning && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div className="glass-panel animate-fade-in" style={{ maxWidth: '500px', width: '90%', padding: '2.5rem', border: '1px solid var(--danger)', textAlign: 'center', background: 'var(--bg-secondary)' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
+            <h2 style={{ color: 'var(--danger)', marginBottom: '1rem', fontSize: '1.8rem' }}>Caution: Unverified Listing</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', lineHeight: '1.6', fontSize: '1.05rem' }}>
+              This job could not be verified by our Anti-Scam AI. Please proceed with caution, <strong>do not pay for equipment upfront</strong>, and verify the company independently before providing personal information.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexDirection: 'column' }}>
+              <button className="btn btn-primary" style={{ background: 'var(--danger)', borderColor: 'var(--danger)', padding: '0.8rem' }} onClick={() => {
+                setShowWarning(false);
+                onApply();
+              }}>
+                I understand, continue to application
+              </button>
+              <button className="btn btn-secondary" style={{ padding: '0.8rem' }} onClick={() => setShowWarning(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 function App() {
   const [activeTab, setActiveTab] = useState('feed');
   
@@ -13,7 +70,6 @@ function App() {
   const [searchStart, setSearchStart] = useState(0);
   const [locationError, setLocationError] = useState("");
   const [roleError, setRoleError] = useState("");
-  const [pendingApply, setPendingApply] = useState<{job: any, index: number} | null>(null);
 
   const fetchJobs = async (q: string = "", l: string = "", start: number = 0) => {
     setJobsLoading(true);
@@ -307,36 +363,20 @@ function App() {
                 </div>
               ) : mockJobs.length > 0 ? (
                 mockJobs.map((job, idx) => (
-                  <div key={idx} className="glass-panel job-card animate-fade-in" style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.5rem' }}>
-                      <h2 style={{ fontSize: '1.4rem', margin: 0 }}>{job.title}</h2>
-                      {job.is_unverified && (
-                        <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '1px solid #f59e0b', whiteSpace: 'nowrap', fontWeight: 'bold' }} title="AI could not scan this listing for scams because the API lacked structured requirements.">
-                          ⚠️ Unverified
-                        </span>
-                      )}
-                    </div>
-                    <h4 style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.95rem' }}>{job.company} • {job.location}</h4>
-                    <div style={{ color: 'var(--text-muted)', textAlign: 'left', marginBottom: '1.5rem', whiteSpace: 'pre-line', flex: 1, maxHeight: '120px', overflowY: 'auto', paddingRight: '0.5rem', lineHeight: '1.5', fontSize: '0.9rem' }}>
-                      {job.description}
-                    </div>
-                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-start' }}>
-                      <button className="btn btn-secondary" style={{ color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.3)', padding: '0.5rem 1.5rem' }} onClick={() => {
-                        setMockJobs(prev => prev.filter((_, i) => i !== idx));
-                      }}>Pass ❌</button>
-                      <button className="btn btn-primary" style={{ background: 'var(--success)', boxShadow: '0 4px 14px 0 rgba(16, 185, 129, 0.4)', padding: '0.5rem 1.5rem' }} onClick={() => {
-                        if (job.is_unverified) {
-                          setPendingApply({ job, index: idx });
-                          return;
-                        }
-                        if (job.url) {
-                          window.open(job.url, '_blank');
-                        }
-                        setTrackerJobs(prev => [...prev, { title: job.title, company: job.company, status: 'Applied' }]);
-                        setMockJobs(prev => prev.filter((_, i) => i !== idx));
-                      }}>Apply ✅</button>
-                    </div>
-                  </div>
+                  <JobCard 
+                    key={idx} 
+                    job={job} 
+                    onPass={() => {
+                      setMockJobs(prev => prev.filter((_, i) => i !== idx));
+                    }}
+                    onApply={() => {
+                      if (job.url) {
+                        window.open(job.url, '_blank');
+                      }
+                      setTrackerJobs(prev => [...prev, { title: job.title, company: job.company, status: 'Applied' }]);
+                      setMockJobs(prev => prev.filter((_, i) => i !== idx));
+                    }}
+                  />
                 ))
               ) : (
                 <div className="glass-panel job-card animate-fade-in" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
@@ -877,33 +917,7 @@ function App() {
           {renderContent()}
         </div>
       </main>
-      {/* Unverified Job Warning Modal */}
-      {pendingApply && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-          <div className="glass-panel animate-fade-in" style={{ maxWidth: '500px', width: '90%', padding: '2.5rem', border: '1px solid var(--danger)', textAlign: 'center', background: 'var(--bg-secondary)' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
-            <h2 style={{ color: 'var(--danger)', marginBottom: '1rem', fontSize: '1.8rem' }}>Caution: Unverified Listing</h2>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', lineHeight: '1.6', fontSize: '1.05rem' }}>
-              This job could not be verified by our Anti-Scam AI. Please proceed with caution, <strong>do not pay for equipment upfront</strong>, and verify the company independently before providing personal information.
-            </p>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexDirection: 'column' }}>
-              <button className="btn btn-primary" style={{ background: 'var(--danger)', borderColor: 'var(--danger)', padding: '0.8rem' }} onClick={() => {
-                if (pendingApply.job.url) {
-                  window.open(pendingApply.job.url, '_blank');
-                }
-                setTrackerJobs(prev => [...prev, { title: pendingApply.job.title, company: pendingApply.job.company, status: 'Applied' }]);
-                setMockJobs(prev => prev.filter((_, i) => i !== pendingApply.index));
-                setPendingApply(null);
-              }}>
-                I understand, continue to application
-              </button>
-              <button className="btn btn-secondary" style={{ padding: '0.8rem' }} onClick={() => setPendingApply(null)}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      
     </div>
   );
 }
