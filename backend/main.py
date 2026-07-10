@@ -169,9 +169,8 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
             query = q.lower()
             location = l.lower().strip()
             
-            # 1. Set a Hard Default if left empty
-            if not location:
-                location = "remote" # Defaulting to remote is highly effective for a broad US search
+            # The frontend now explicitly blocks empty location searches, 
+            # so we only process the jobs based on intentional user input.
             
             for item in data.get("data", []):
                 title = item.get("title", "")

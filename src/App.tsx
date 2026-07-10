@@ -214,7 +214,16 @@ function App() {
                 value={searchRole}
                 onChange={(e) => setSearchRole(e.target.value)}
                 style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
-                onKeyDown={(e) => e.key === 'Enter' && fetchJobs(searchRole, searchLoc)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    if (!searchLoc.trim()) {
+                      alert("Please enter a city or state. (Or type 'Remote' if you want to compete nationally)");
+                      return;
+                    }
+                    setSearchStart(0);
+                    fetchJobs(searchRole, searchLoc, 0);
+                  }
+                }}
               />
               <input 
                 type="text" 
@@ -222,11 +231,27 @@ function App() {
                 value={searchLoc}
                 onChange={(e) => setSearchLoc(e.target.value)}
                 style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
-                onKeyDown={(e) => e.key === 'Enter' && fetchJobs(searchRole, searchLoc)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    if (!searchLoc.trim()) {
+                      alert("Please enter a city or state. (Or type 'Remote' if you want to compete nationally)");
+                      return;
+                    }
+                    setSearchStart(0);
+                    fetchJobs(searchRole, searchLoc, 0);
+                  }
+                }}
               />
               <button 
                 className="btn btn-primary" 
-                onClick={() => { setSearchStart(0); fetchJobs(searchRole, searchLoc, 0); }}
+                onClick={() => {
+                  if (!searchLoc.trim()) {
+                    alert("Please enter a city or state. (Or type 'Remote' if you want to compete nationally)");
+                    return;
+                  }
+                  setSearchStart(0);
+                  fetchJobs(searchRole, searchLoc, 0);
+                }}
                 style={{ padding: '0.8rem 2rem' }}
               >
                 🔍 Search
