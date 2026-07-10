@@ -8,6 +8,7 @@ function App() {
   const [syncFile, setSyncFile] = useState<File | null>(null);
   const syncFileInputRef = useRef<HTMLInputElement>(null);
   const [linkedinSyncing, setLinkedinSyncing] = useState(false);
+  const [linkedinUrl, setLinkedinUrl] = useState("");
   
   // Job Feed State
 
@@ -190,11 +191,21 @@ function App() {
               <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', border: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.2)' }}>
                 <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🔗</div>
                 <h2 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>Link your LinkedIn</h2>
-                <input type="text" placeholder="https://linkedin.com/in/username" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-highlight)', background: 'rgba(0,0,0,0.4)', color: 'white', marginBottom: '1.5rem', outline: 'none' }} />
+                <input 
+                  type="text" 
+                  placeholder="https://linkedin.com/in/username" 
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-highlight)', background: 'rgba(0,0,0,0.4)', color: 'white', marginBottom: '1.5rem', outline: 'none' }} 
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                />
                 <button 
                   className="btn btn-primary" 
                   style={{ width: '100%' }}
                   onClick={() => {
+                    if (!linkedinUrl.trim()) {
+                      alert("Please enter a LinkedIn URL first.");
+                      return;
+                    }
                     setLinkedinSyncing(true);
                     setTimeout(() => {
                       alert("✅ LinkedIn Profile synced successfully!");
