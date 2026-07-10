@@ -81,3 +81,25 @@ When we release new features or bug fixes, you don't want to lose your saved job
 * **Kanban Application Tracker:** Keep a visual board of your progress. The system will remind you to keep pushing because volume is key!
 * **Resume Tailorer:** Paste a job description and upload your PDF resume. The AI will rewrite your bullet points to match the exact keywords the company is looking for.
 * **Interview Coaching Engine:** Practice for your interview in a text-based chat. Get structured feedback and see exactly how a "Gold Standard" answer should look.
+
+## 🤝 Contributing
+Contributions are welcome! Please read CONTRIBUTING.md for guidelines on setting up the dev environment, running tests, and submitting pull requests.
+
+This project follows the Contributor Covenant Code of Conduct.
+
+## 📄 License
+This project is licensed under the MIT License — see the LICENSE file for details.
+
+## ❤️ Sponsor This Project
+GetHired is free, open-source software maintained in spare time. Sponsorship directly funds:
+
+* 🛠️ New features — new language support, smarter analysis, and deeper integrations
+* 🐛 Bug fixes and maintenance to keep the tool reliable
+* 📖 Documentation and examples to help more people adopt it
+* 🌍 Community support — answering issues, reviewing PRs, and growing the ecosystem
+
+If this tool takes the burnout out of your job search and helps you land your next role, consider supporting its development:
+
+→ [Sponsor @Tahiram32 on GitHub](https://github.com/sponsors/Tahiram32)
+
+Every contribution — no matter the size — helps keep this project alive and moving forward. Thank you! 🙏
