@@ -8,6 +8,13 @@ echo.
 
 echo [0/3] Cleaning up old processes...
 FOR /F "tokens=5" %%T IN ('netstat -a -n -o ^| findstr :8001') DO (
+    TaskKill /PID %%T >nul 2>nul
+)
+FOR /F "tokens=5" %%T IN ('netstat -a -n -o ^| findstr :5173') DO (
+    TaskKill /PID %%T >nul 2>nul
+)
+timeout /t 2 /nobreak >nul
+FOR /F "tokens=5" %%T IN ('netstat -a -n -o ^| findstr :8001') DO (
     TaskKill /PID %%T /F >nul 2>nul
 )
 FOR /F "tokens=5" %%T IN ('netstat -a -n -o ^| findstr :5173') DO (

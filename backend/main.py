@@ -4,6 +4,8 @@ import pdfplumber
 import os
 import json
 import stat
+import subprocess
+import getpass
 import requests
 import urllib.parse
 import concurrent.futures
@@ -19,6 +21,8 @@ app = FastAPI(title="GetHired API")
 import platform
 import json
 import stat
+import subprocess
+import getpass
 
 def get_app_dir():
     system = platform.system()
@@ -86,7 +90,13 @@ async def update_settings(settings: SettingsUpdate):
     with open(CONFIG_FILE, "w") as f:
         json.dump(keys, f)
         
-    if platform.system() != "Windows":
+    if platform.system() == "Windows":
+        try:
+            username = getpass.getuser()
+            subprocess.run(['icacls', CONFIG_FILE, '/inheritance:r', '/grant:r', f'{username}:F'], check=False, capture_output=True)
+        except Exception as e:
+            print(f"Warning: Could not set strict Windows permissions: {e}")
+    else:
         os.chmod(CONFIG_FILE, stat.S_IRUSR | stat.S_IWUSR)
         
     return {"status": "success"}
