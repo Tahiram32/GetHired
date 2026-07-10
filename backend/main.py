@@ -467,6 +467,9 @@ The user has provided their current resume and a list of identified 'Skill Gaps'
 Your goal is to suggest rewrites for specific bullet points in their resume to naturally incorporate these missing skills.
 If the user's experience suggests they possess the foundational knowledge, reframe their existing bullets to explicitly use the missing ATS keywords. Do not fabricate entire jobs, but heavily optimize the phrasing.
 
+HUMANITY SCORE FILTER:
+You must strictly limit the use of adjectives. Do NOT use corporate buzzwords or executive puffery (e.g., "synergized", "architected high-scale mission-critical infrastructure"). Prioritize strong, simple active verbs. Every suggested rewrite MUST be 25 words or less. Keep it punchy, human-readable, and honest.
+
 [IDENTIFIED SKILL GAPS]
 {skill_gaps}
 
