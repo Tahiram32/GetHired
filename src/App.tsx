@@ -146,6 +146,7 @@ function App() {
   const [showScorecardScreen, setShowScorecardScreen] = useState(false);
   const [scorecardError, setScorecardError] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   React.useEffect(() => {
     localStorage.setItem("gethired_interview_history", JSON.stringify(interviewHistory));
@@ -154,6 +155,7 @@ function App() {
 
 
   const retryScorecard = async () => {
+    if (retryCount >= 3) return;
     setIsRetrying(true);
     const formData = new FormData();
     formData.append("session_data", JSON.stringify(sessionData.map(s => ({ question: s.question, answer: s.answer }))));
@@ -169,10 +171,12 @@ function App() {
         setScorecardError(false);
       } else {
         setScorecardError(true);
+        setRetryCount(prev => prev + 1);
       }
     } catch (err) {
       console.error(err);
       setScorecardError(true);
+      setRetryCount(prev => prev + 1);
     } finally {
       setIsRetrying(false);
     }
@@ -182,6 +186,7 @@ function App() {
     setShowScorecardScreen(true);
     setIsGeneratingScorecard(true);
     setScorecardError(false);
+    setRetryCount(0);
     
     const totalChars = sessionData.reduce((acc, curr) => acc + curr.answer.length, 0);
     if (totalChars < 300) {
@@ -649,12 +654,17 @@ function App() {
                         <p style={{ marginBottom: '1.5rem', lineHeight: '1.6' }}>We could not reach the server to generate your coaching scorecard due to a network timeout.</p>
                         <button 
                           className="btn btn-primary" 
-                          style={{ background: 'var(--danger)', borderColor: 'var(--danger)', opacity: isRetrying ? 0.7 : 1 }} 
+                          style={{ background: 'var(--danger)', borderColor: 'var(--danger)', opacity: (isRetrying || retryCount >= 3) ? 0.7 : 1 }} 
                           onClick={retryScorecard}
-                          disabled={isRetrying}
+                          disabled={isRetrying || retryCount >= 3}
                         >
-                          {isRetrying ? "🔄 Retrying Connection..." : "🔄 Retry Connection"}
+                          {retryCount >= 3 ? "❌ Service Unavailable" : isRetrying ? "🔄 Retrying Connection..." : "🔄 Retry Connection"}
                         </button>
+                        {retryCount >= 3 && (
+                          <div style={{ marginTop: '1rem', color: 'var(--danger)', fontWeight: 'bold' }}>
+                            The server is persistently unreachable. Please copy your raw transcript below and move on.
+                          </div>
+                        )}
                       </div>
                       
                       <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '8px' }}>
