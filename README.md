@@ -8,41 +8,68 @@ Everything runs directly on your own computer. Your data, your resume, and your 
 
 ---
 
-## 🚀 How to Start the App (Zero Tech Skills Required!)
+## 🛠️ Step 1: Install the Prerequisites (Do this first!)
+GetHired runs locally on your computer, which means your machine needs the basic tools to understand the code. If you do not install these first, the app will not work.
 
-You don't need to be a programmer to use this. Just follow these simple steps:
+1. **Python (version 3.10 or higher)**
+   * **Download Here:** [python.org/downloads](https://www.python.org/downloads/)
+   * **IMPORTANT FOR WINDOWS:** When the installer opens, look at the very bottom of the window and check the box that says **"Add python.exe to PATH"** before you click Install.
 
-### 1. The One-Time Setup (API Keys)
-GetHired uses two services to find jobs and analyze your resume. You need to give the app your personal "keys" to these services.
-1. Create a file named `.env` in this exact folder (the `gethired` folder).
-2. Open it in a basic text editor (like Notepad or TextEdit).
-3. Paste the following two lines into the file:
-   ```text
-   OPENAI_API_KEY=your_openai_api_key_here
-   SERPAPI_API_KEY=your_serpapi_api_key_here
-   ```
-4. Replace the placeholders with your actual keys (you can get them for free at OpenAI and SerpAPI) and save the file.
-
-### 2. Launching the App
-**For Windows Users:**
-Just double-click the `start_windows.bat` file in this folder. 
-A black window will open and do all the heavy lifting for you. It might take a minute or two the very first time. Once it's ready, your web browser will automatically open to the app!
-
-**For Mac / Linux Users:**
-1. Open your "Terminal" application.
-2. Drag and drop the `start_mac_linux.sh` file into the Terminal window and press Enter. 
-   *(If it says "Permission denied", type `chmod +x start_mac_linux.sh` and press Enter, then try again).*
-3. The app will install everything it needs and automatically open your web browser.
-
-**Important Note:** 
-Do not close the black terminal window while you are using GetHired! Closing it will turn off the app. When you are done for the day, you can close the window to shut everything down safely.
+2. **Node.js**
+   * **Download Here:** [nodejs.org](https://nodejs.org/)
+   * Download the "LTS" (Long Term Support) version and install it with the default settings.
 
 ---
 
-## 🛠️ System Requirements
-If the app refuses to open, you might need to install two standard programs on your computer first:
-1. **Python** (version 3.10 or higher): [Download Here](https://www.python.org/downloads/) *(Windows users: Check "Add python.exe to PATH" during installation!)*
-2. **Node.js**: [Download Here](https://nodejs.org/)
+## 🔑 Step 2: Get Your API Keys
+GetHired uses AI and live search data to power the app. You need to give the app your personal "keys" to these services. It costs a few pennies per use, but you control the budget.
+
+### How to get your OpenAI Key:
+1. Go directly to this exact page: [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+2. Sign up or log in.
+3. In the left menu, click **Settings > Billing** and add a minimum $5 balance (the app uses very little, but OpenAI requires a prepaid balance to work).
+4. Go back to the **API keys** page.
+5. Click the **"Create new secret key"** button. Name it "GetHired".
+6. Copy the long string of text immediately (it starts with `sk-`). You will never be able to see it again!
+
+### How to set them up in the app:
+1. Open the `gethired` folder you downloaded.
+2. Create a new text file and name it exactly `.env` (don't forget the dot!).
+3. Open it in Notepad or TextEdit and paste your keys like this:
+   ```text
+   OPENAI_API_KEY=sk-your_long_openai_key_here
+   SERPAPI_API_KEY=your_serpapi_api_key_here
+   ```
+4. Save the file.
+
+---
+
+## 🚀 Step 3: Launching the App
+
+### For Windows Users
+Double-click the `start_windows.bat` file in the folder. 
+
+**🚨 Important Security Warning:** 
+Because you downloaded this from the internet, a massive bright blue screen might pop up saying **"Windows protected your PC."** 
+* Do not panic. This is normal. 
+* Click the small text that says **"More info"**.
+* Click the button that says **"Run anyway"**.
+
+A black terminal window will open and install everything automatically. Your web browser will open the app when it's ready. **Do not close the black window while using the app!**
+
+### For Mac / Linux Users
+Mac computers do not allow you to double-click these scripts by default. You need to tell your computer it is safe to run.
+
+1. Open your **Terminal** application (press Cmd + Space, type "Terminal", and hit Enter).
+2. Type `cd ` (with a space after it).
+3. Drag and drop the `gethired` folder from your desktop into the Terminal window and press Enter.
+4. Copy and paste these two commands, pressing Enter after each one:
+   ```bash
+   chmod +x start_mac_linux.sh
+   ./start_mac_linux.sh
+   ```
+
+The script will install everything and open the app in your browser automatically.
 
 ---
 
@@ -52,5 +79,3 @@ If the app refuses to open, you might need to install two standard programs on y
 * **Kanban Application Tracker:** Keep a visual board of your progress. The system will remind you to keep pushing because volume is key!
 * **Resume Tailorer:** Paste a job description and upload your PDF resume. The AI will rewrite your bullet points to match the exact keywords the company is looking for.
 * **Interview Coaching Engine:** Practice for your interview in a text-based chat. Get structured feedback and see exactly how a "Gold Standard" answer should look.
-
-*Built to help you land the job.*
