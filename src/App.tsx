@@ -307,7 +307,14 @@ function App() {
               ) : mockJobs.length > 0 ? (
                 mockJobs.map((job, idx) => (
                   <div key={idx} className="glass-panel job-card animate-fade-in" style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                    <h2 style={{ marginBottom: '0.5rem', fontSize: '1.4rem' }}>{job.title}</h2>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.5rem' }}>
+                      <h2 style={{ fontSize: '1.4rem', margin: 0 }}>{job.title}</h2>
+                      {job.is_unverified && (
+                        <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.1)', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.2)', whiteSpace: 'nowrap' }} title="AI could not scan this listing for scams because the API lacked structured requirements.">
+                          ⚠️ Unverified
+                        </span>
+                      )}
+                    </div>
                     <h4 style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.95rem' }}>{job.company} • {job.location}</h4>
                     <div style={{ color: 'var(--text-muted)', textAlign: 'left', marginBottom: '1.5rem', whiteSpace: 'pre-line', flex: 1, maxHeight: '120px', overflowY: 'auto', paddingRight: '0.5rem', lineHeight: '1.5', fontSize: '0.9rem' }}>
                       {job.description}
