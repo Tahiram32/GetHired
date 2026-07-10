@@ -1,3 +1,4 @@
+import { LocationAutocomplete } from './components/LocationAutocomplete';
 import React, { useState, useRef } from 'react';
 import './index.css';
 
@@ -389,7 +390,7 @@ function App() {
               />
               <LocationAutocomplete 
                 value={searchLoc}
-                onChange={(val) => {
+                onChange={(val: string) => {
                   setSearchLoc(val);
                   setLocationError("");
                 }}

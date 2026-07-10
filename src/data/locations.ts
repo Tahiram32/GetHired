@@ -1,8 +1,8 @@
 export interface Location {
-  id: str;
-  city: str;
-  state: str;
-  label: str;
+  id: string;
+  city: string;
+  state: string;
+  label: string;
 }
 
 export const LOCATIONS: Location[] = [

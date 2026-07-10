@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { LOCATIONS, Location } from '../data/locations';
+import { LOCATIONS, type Location } from '../data/locations';
 
 interface LocationAutocompleteProps {
   value: string;
