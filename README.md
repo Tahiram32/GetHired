@@ -1,6 +1,5 @@
 # GetHired
 
-You are more than a resume passing through an algorithm. GetHired is a free, locally-run toolkit designed to take the burnout out of your job search and put the leverage back in your hands.
 
 Everything runs securely on your own computer. Your data, your resume, and your interview answers never leave your machine except to be processed directly by your secure API key.
 
