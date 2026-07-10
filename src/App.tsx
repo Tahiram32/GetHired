@@ -9,7 +9,7 @@ function App() {
   const syncFileInputRef = useRef<HTMLInputElement>(null);
   
   // Job Feed State
-  const [jobFeedIndex, setJobFeedIndex] = useState(0);
+
   const [mockJobs, setMockJobs] = useState<any[]>([]);
   const [jobsLoading, setJobsLoading] = useState(false);
   const [searchRole, setSearchRole] = useState("");
@@ -42,6 +42,47 @@ function App() {
   // Tracker State
   type TrackerJob = { title: string, company: string, status: 'Applied' | 'Interviewing' | 'Offers' };
   const [trackerJobs, setTrackerJobs] = useState<TrackerJob[]>([]);
+
+  // Interview Simulator State
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [streamActive, setStreamActive] = useState(false);
+  const [questionIndex, setQuestionIndex] = useState(0);
+
+  const interviewQuestions = [
+    "Tell me about a time you had to pivot quickly on a project.",
+    "Describe a situation where you disagreed with a coworker. How did you resolve it?",
+    "What is your greatest weakness, and how are you working to overcome it?",
+    "Tell me about a project you are most proud of and why.",
+    "How do you prioritize your work when you have multiple tight deadlines?"
+  ];
+
+  const startWebcam = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        setStreamActive(true);
+      }
+    } catch (err) {
+      alert("Could not access webcam. Please ensure permissions are granted.");
+    }
+  };
+
+  const stopWebcam = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((track: any) => track.stop());
+      setStreamActive(false);
+      setIsRecording(false);
+    }
+  };
+  
+  React.useEffect(() => {
+    if (activeTab !== 'interview') {
+      stopWebcam();
+    }
+  }, [activeTab]);
   
   // Backend Integration State for ATS Tailorer
   const [file, setFile] = useState<File | null>(null);
@@ -347,22 +388,49 @@ function App() {
             </p>
             <div className="dashboard-grid" style={{ marginTop: 0 }}>
               <div className="glass-panel" style={{ padding: '1rem', height: '400px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                <div style={{ background: '#000', flex: 1, borderRadius: '8px', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                  <div style={{ color: 'var(--text-muted)' }}>[ Video Feed Placeholder ]</div>
+                <div style={{ background: '#000', flex: 1, borderRadius: '8px', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+                  {!streamActive && (
+                    <button className="btn btn-primary" onClick={startWebcam} style={{ position: 'absolute', zIndex: 10 }}>📷 Enable Webcam</button>
+                  )}
+                  <video 
+                    ref={videoRef} 
+                    autoPlay 
+                    muted 
+                    playsInline 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)', opacity: streamActive ? 1 : 0 }} 
+                  />
+                  {isRecording && (
+                    <div className="pulse-dot" style={{ position: 'absolute', top: '1rem', right: '1rem', width: '12px', height: '12px', background: 'red', borderRadius: '50%', boxShadow: '0 0 10px red' }}></div>
+                  )}
                 </div>
                 <div style={{ padding: '1rem 0 0 0', display: 'flex', gap: '1rem' }}>
-                  <button className="btn btn-primary" style={{ flex: 1 }}>🎙️ Start Speaking</button>
-                  <button className="btn btn-secondary">⏸️ Pause</button>
+                  <button 
+                    className={`btn ${isRecording ? 'btn-danger' : 'btn-primary'}`} 
+                    style={{ flex: 1, background: isRecording ? '#EF4444' : undefined }}
+                    onClick={() => {
+                        if (!streamActive) { alert("Please enable your webcam first."); return; }
+                        setIsRecording(!isRecording);
+                    }}
+                  >
+                    {isRecording ? "⏹️ Stop Recording" : "🎙️ Start Speaking"}
+                  </button>
+                  <button className="btn btn-secondary" onClick={() => setQuestionIndex((prev) => (prev + 1) % interviewQuestions.length)}>Next Question ➡️</button>
                 </div>
               </div>
               <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <h3>Confidence Coach</h3>
-                <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>💡 "You are speaking a bit fast. Take a deep breath. It is totally okay to pause and think about your answer!"</p>
-                </div>
+                {isRecording ? (
+                  <div className="animate-fade-in" style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--success)' }}>🟢 Analyzing your speech and body language... You are doing great!</p>
+                  </div>
+                ) : (
+                  <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Click "Start Speaking" to begin your mock interview. The AI will provide feedback on your pacing, tone, and confidence.</p>
+                  </div>
+                )}
                 <div style={{ marginTop: 'auto' }}>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Current Question:</p>
-                  <p style={{ fontStyle: 'italic' }}>"Tell me about a time you had to pivot quickly on a project."</p>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Current Question {questionIndex + 1} of {interviewQuestions.length}:</p>
+                  <p style={{ fontStyle: 'italic', fontSize: '1.1rem', color: 'var(--text-primary)' }}>"{interviewQuestions[questionIndex]}"</p>
                 </div>
               </div>
             </div>
