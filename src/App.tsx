@@ -2,13 +2,7 @@ import React, { useState, useRef } from 'react';
 import './index.css';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('sync');
-  
-  // Master Profile Sync State
-  const [syncFile, setSyncFile] = useState<File | null>(null);
-  const syncFileInputRef = useRef<HTMLInputElement>(null);
-  const [linkedinSyncing, setLinkedinSyncing] = useState(false);
-  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [activeTab, setActiveTab] = useState('feed');
   
   // Job Feed State
 
@@ -180,72 +174,6 @@ function App() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'sync':
-        return (
-          <div className="animate-fade-in">
-            <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>Create Your <span className="text-gradient">Master Profile</span></h1>
-            <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginBottom: '3rem', lineHeight: '1.6' }}>
-              Let's get your background into the system. You can paste your LinkedIn link, or just drop in your best resume. The tool will do the heavy lifting to pull all your experience together into one place.
-            </p>
-            <div className="dashboard-grid">
-              <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', border: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.2)' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🔗</div>
-                <h2 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>Link your LinkedIn</h2>
-                <input 
-                  type="text" 
-                  placeholder="https://linkedin.com/in/username" 
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-highlight)', background: 'rgba(0,0,0,0.4)', color: 'white', marginBottom: '1.5rem', outline: 'none' }} 
-                  value={linkedinUrl}
-                  onChange={(e) => setLinkedinUrl(e.target.value)}
-                />
-                <button 
-                  className="btn btn-primary" 
-                  style={{ width: '100%' }}
-                  onClick={() => {
-                    if (!linkedinUrl.trim()) {
-                      alert("Please enter a LinkedIn URL first.");
-                      return;
-                    }
-                    setLinkedinSyncing(true);
-                    setTimeout(() => {
-                      alert("✅ LinkedIn Profile synced successfully!");
-                      setActiveTab("feed");
-                      setLinkedinSyncing(false);
-                    }, 2500);
-                  }}
-                  disabled={linkedinSyncing}
-                >
-                  {linkedinSyncing ? "Syncing Background..." : "Sync My Profile"}
-                </button>
-                {linkedinSyncing && <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Bypassing LinkedIn bot-protection... this may take a moment.</p>}
-              </div>
-              <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', border: '2px dashed var(--border-subtle)', background: 'rgba(0,0,0,0.2)', cursor: 'pointer' }} onClick={() => syncFileInputRef.current?.click()}>
-                <input 
-                  type="file" 
-                  accept=".pdf" 
-                  ref={syncFileInputRef} 
-                  style={{ display: 'none' }} 
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files.length > 0) {
-                      setSyncFile(e.target.files[0]);
-                      // Mock sync success and auto-redirect
-                      setTimeout(() => {
-                        alert("✅ Master Profile successfully populated from " + e.target.files![0].name);
-                        setActiveTab("feed");
-                      }, 800);
-                    }
-                  }} 
-                />
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📄</div>
-                <h2 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>Upload your Resume</h2>
-                <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem', lineHeight: '1.5' }}>Don't really use LinkedIn? No problem. Just drop your PDF resume right here.</p>
-                <button className="btn btn-secondary" style={{ width: '100%', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', color: 'white' }}>
-                  {syncFile ? `✅ ${syncFile.name} Synced!` : "Choose File"}
-                </button>
-              </div>
-            </div>
-          </div>
-        );
       
       case 'feed':
         return (
@@ -752,7 +680,6 @@ function App() {
           <span className="text-gradient">🚀</span> GetHired
         </div>
         <div style={{ padding: '1.5rem 0', flex: 1, overflowY: 'auto' }}>
-          <div className={`nav-item ${activeTab === 'sync' ? 'active' : ''}`} onClick={() => setActiveTab('sync')}>🔗 Master Profile</div>
           <div className={`nav-item ${activeTab === 'feed' ? 'active' : ''}`} onClick={() => setActiveTab('feed')}>🔍 Job Feed</div>
           <div className={`nav-item ${activeTab === 'apply' ? 'active' : ''}`} onClick={() => setActiveTab('apply')}>📄 Resume Tailorer</div>
           <div className={`nav-item ${activeTab === 'kanban' ? 'active' : ''}`} onClick={() => setActiveTab('kanban')}>📊 Tracker Board</div>
