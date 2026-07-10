@@ -36,7 +36,16 @@ function App() {
     fetchJobs(searchRole, searchLoc);
   }, []);
   // Tracker State
-  type TrackerJob = { title: string, company: string, status: 'Applied' | 'Interviewing' | 'Offers' };
+  type TrackerJob = { 
+    title: string; 
+    company: string; 
+    status: 'Applied' | 'Interviewing' | 'Offers';
+    offerDetails?: {
+      baseSalary: string;
+      benefits: string;
+      deadlineDate: string;
+    };
+  };
   const [trackerJobs, setTrackerJobs] = useState<TrackerJob[]>(() => {
     const saved = localStorage.getItem("gethired_tracker_jobs");
     return saved ? JSON.parse(saved) : [];
@@ -45,6 +54,12 @@ function App() {
   React.useEffect(() => {
     localStorage.setItem("gethired_tracker_jobs", JSON.stringify(trackerJobs));
   }, [trackerJobs]);
+
+  // Modal State for Offer Details
+  const [editingOfferJob, setEditingOfferJob] = useState<TrackerJob | null>(null);
+  const [offerSalary, setOfferSalary] = useState("");
+  const [offerBenefits, setOfferBenefits] = useState("");
+  const [offerDeadline, setOfferDeadline] = useState("");
 
   // Interview Simulator State
   const [interviewRole, setInterviewRole] = useState("");
@@ -541,11 +556,62 @@ function App() {
                   <div key={idx} className="kanban-card" style={{ borderLeft: '4px solid var(--success)', background: 'rgba(16, 185, 129, 0.1)' }}>
                     <h4 style={{ marginBottom: '0.2rem' }}>{job.title}</h4>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{job.company}</p>
-                    <div style={{ marginTop: '0.5rem', color: 'var(--success)', fontWeight: 'bold', fontSize: '0.8rem' }}>Offer Received! 💰</div>
+                    
+                    {job.offerDetails ? (
+                      <div style={{ marginTop: '1rem', padding: '0.8rem', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', fontSize: '0.85rem' }}>
+                        <div style={{ marginBottom: '0.3rem' }}><strong style={{ color: 'var(--success)' }}>💰 Salary:</strong> {job.offerDetails.baseSalary}</div>
+                        <div style={{ marginBottom: '0.3rem' }}><strong style={{ color: 'var(--accent-primary)' }}>🎁 Benefits:</strong> {job.offerDetails.benefits}</div>
+                        <div><strong style={{ color: 'var(--danger)' }}>⏰ Deadline:</strong> {job.offerDetails.deadlineDate}</div>
+                        <button className="btn btn-secondary" style={{ marginTop: '0.8rem', width: '100%', fontSize: '0.75rem', padding: '0.3rem' }} onClick={() => {
+                          setOfferSalary(job.offerDetails!.baseSalary);
+                          setOfferBenefits(job.offerDetails!.benefits);
+                          setOfferDeadline(job.offerDetails!.deadlineDate);
+                          setEditingOfferJob(job);
+                        }}>Edit Details ✏️</button>
+                      </div>
+                    ) : (
+                      <button className="btn btn-primary" style={{ marginTop: '1rem', width: '100%', fontSize: '0.8rem', padding: '0.4rem', background: 'var(--success)' }} onClick={() => {
+                        setOfferSalary("");
+                        setOfferBenefits("");
+                        setOfferDeadline("");
+                        setEditingOfferJob(job);
+                      }}>+ Add Offer Details</button>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
+
+            {/* Offer Details Modal */}
+            {editingOfferJob && (
+              <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                <div className="glass-panel animate-fade-in" style={{ width: '400px', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <h3 style={{ marginBottom: '0.5rem', color: 'var(--success)' }}>Track Offer Details</h3>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Save the numbers here so you can easily reference them in the Fair Pay Advocate tab.</p>
+                  
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Base Salary / Hourly</label>
+                    <input type="text" value={offerSalary} onChange={(e) => setOfferSalary(e.target.value)} placeholder="e.g. $120,000" style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.5)', color: 'white' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Key Benefits (PTO, Equity, Remote)</label>
+                    <input type="text" value={offerBenefits} onChange={(e) => setOfferBenefits(e.target.value)} placeholder="e.g. 4 weeks PTO, Fully Remote" style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.5)', color: 'white' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Decision Deadline</label>
+                    <input type="text" value={offerDeadline} onChange={(e) => setOfferDeadline(e.target.value)} placeholder="e.g. Friday at 5PM" style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.5)', color: 'white' }} />
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                    <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setEditingOfferJob(null)}>Cancel</button>
+                    <button className="btn btn-primary" style={{ flex: 1, background: 'var(--success)' }} onClick={() => {
+                      setTrackerJobs(prev => prev.map(j => j === editingOfferJob ? { ...j, offerDetails: { baseSalary: offerSalary, benefits: offerBenefits, deadlineDate: offerDeadline } } : j));
+                      setEditingOfferJob(null);
+                    }}>Save Details</button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
 
