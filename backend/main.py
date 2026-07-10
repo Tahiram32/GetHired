@@ -162,12 +162,16 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
         # Step 1: Pull live jobs from SerpAPI Google Jobs
         api_jobs = []
         try:
-            query = q.lower().strip() if q.strip() else "jobs"
+            query = q.lower().strip()
             location = l.lower().strip()
             
             # Backend Safety Net: Reject empty location requests
             if not location:
                 return {"status": "error", "message": "Backend Error: A valid Location parameter is strictly required."}
+            
+            # Backend Safety Net: Reject empty role requests to prevent low-quality spam
+            if not query:
+                return {"status": "error", "message": "Backend Error: A valid Role parameter is strictly required."}
             
             serpapi_key = os.getenv("SERPAPI_KEY")
             if not serpapi_key:
@@ -191,12 +195,25 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
                 loc = item.get("location", "")
                 desc = item.get("description", "")
                 
+                # Token-Saving Utility: Strip fluff and extract requirements
+                import re
+                fluff_patterns = [r"equal opportunity.*", r"about us.*", r"about the company.*", r"what we offer.*", r"benefits.*"]
+                clean_desc = desc
+                for pattern in fluff_patterns:
+                    clean_desc = re.sub(pattern, "", clean_desc, flags=re.IGNORECASE | re.DOTALL)
+                
+                bullets = re.findall(r"(?:^|\n)\s*[-•*]\s*(.+)", clean_desc)
+                if len(bullets) > 2:
+                    snippet = " | ".join(bullets)[:800]
+                else:
+                    snippet = re.sub(r'\s+', ' ', clean_desc)[:800]
+                
                 api_jobs.append({
                     "title": title,
                     "company": company,
                     "location": loc,
                     "url": item.get("share_link", ""),
-                    "description_snippet": desc[:2000] + "..."
+                    "description_snippet": snippet + "..."
                 })
             
             api_jobs = api_jobs[:15]

@@ -12,6 +12,7 @@ function App() {
   const [searchLoc, setSearchLoc] = useState("");
   const [searchStart, setSearchStart] = useState(0);
   const [locationError, setLocationError] = useState("");
+  const [roleError, setRoleError] = useState("");
 
   const fetchJobs = async (q: string = "", l: string = "", start: number = 0) => {
     setJobsLoading(true);
@@ -213,14 +214,22 @@ function App() {
                 type="text" 
                 placeholder="Role (e.g. Frontend Engineer)" 
                 value={searchRole}
-                onChange={(e) => setSearchRole(e.target.value)}
+                onChange={(e) => {
+                  setSearchRole(e.target.value);
+                  setRoleError("");
+                }}
                 style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
+                    if (!searchRole.trim()) {
+                      setRoleError("What kind of role are you looking for?");
+                      return;
+                    }
                     if (!searchLoc.trim()) {
                       setLocationError("Please enter a city or state. (Or type 'Remote' if you want to compete nationally)");
                       return;
                     }
+                    setRoleError("");
                     setLocationError("");
                     setSearchStart(0);
                     fetchJobs(searchRole, searchLoc, 0);
@@ -238,10 +247,15 @@ function App() {
                 style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
+                    if (!searchRole.trim()) {
+                      setRoleError("What kind of role are you looking for?");
+                      return;
+                    }
                     if (!searchLoc.trim()) {
                       setLocationError("Please enter a city or state. (Or type 'Remote' if you want to compete nationally)");
                       return;
                     }
+                    setRoleError("");
                     setLocationError("");
                     setSearchStart(0);
                     fetchJobs(searchRole, searchLoc, 0);
@@ -251,10 +265,15 @@ function App() {
               <button 
                 className="btn btn-primary" 
                 onClick={() => {
+                  if (!searchRole.trim()) {
+                    setRoleError("What kind of role are you looking for?");
+                    return;
+                  }
                   if (!searchLoc.trim()) {
                     setLocationError("Please enter a city or state. (Or type 'Remote' if you want to compete nationally)");
                     return;
                   }
+                  setRoleError("");
                   setLocationError("");
                   setSearchStart(0);
                   fetchJobs(searchRole, searchLoc, 0);
@@ -264,12 +283,21 @@ function App() {
                 🔍 Search
               </button>
             </div>
-            {locationError && (
-              <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '1.5rem', fontWeight: 'bold' }}>
-                ⚠️ {locationError}
+            {(roleError || locationError) && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '1.5rem' }}>
+                {roleError && (
+                  <div style={{ color: 'var(--danger)', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                    ⚠️ {roleError}
+                  </div>
+                )}
+                {locationError && (
+                  <div style={{ color: 'var(--danger)', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                    ⚠️ {locationError}
+                  </div>
+                )}
               </div>
             )}
-            <div className="job-list-feed" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem', maxHeight: '75vh', overflowY: 'auto', paddingRight: '1rem', alignItems: 'start', marginTop: locationError ? '0' : '1.5rem' }}>
+            <div className="job-list-feed" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem', maxHeight: '75vh', overflowY: 'auto', paddingRight: '1rem', alignItems: 'start', marginTop: (roleError || locationError) ? '0' : '1.5rem' }}>
               {jobsLoading ? (
                 <div className="glass-panel job-card animate-fade-in" style={{ textAlign: 'center', padding: '4rem 2rem', gridColumn: '1 / -1' }}>
                   <div style={{ fontSize: '3rem', marginBottom: '1rem', animation: 'spin 2s linear infinite' }}>🤖</div>
