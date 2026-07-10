@@ -108,6 +108,28 @@ class TrackerJob(SQLModel, table=True):
     description: str
     is_unverified: bool = False
     column_id: int = Field(foreign_key="kanban_columns.id")
+    order_index: int = 0
+
+
+class ColumnOrderUpdate(BaseModel):
+    column_id: int
+    job_ids: List[int]
+
+@app.post("/api/kanban/update-column-order")
+async def update_column_order(payload: ColumnOrderUpdate):
+    with Session(engine) as session:
+        # Atomic transaction to reorder all cards in a column
+        jobs = session.exec(select(TrackerJob).where(TrackerJob.id.in_(payload.job_ids))).all()
+        job_map = {job.id: job for job in jobs}
+        
+        for index, job_id in enumerate(payload.job_ids):
+            if job_id in job_map:
+                job_map[job_id].column_id = payload.column_id
+                job_map[job_id].order_index = index
+                
+        session.commit()
+    return {"status": "success"}
+
 
 def init_db():
     SQLModel.metadata.create_all(engine)
