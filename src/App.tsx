@@ -11,6 +11,7 @@ function App() {
   const [searchRole, setSearchRole] = useState("");
   const [searchLoc, setSearchLoc] = useState("");
   const [searchStart, setSearchStart] = useState(0);
+  const [locationError, setLocationError] = useState("");
 
   const fetchJobs = async (q: string = "", l: string = "", start: number = 0) => {
     setJobsLoading(true);
@@ -207,7 +208,7 @@ function App() {
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem', fontStyle: 'italic' }}>
               ℹ️ Hitting "Search" triggers a fresh, real-time scrape across external job boards.
             </p>
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
               <input 
                 type="text" 
                 placeholder="Role (e.g. Frontend Engineer)" 
@@ -217,9 +218,10 @@ function App() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     if (!searchLoc.trim()) {
-                      alert("Please enter a city or state. (Or type 'Remote' if you want to compete nationally)");
+                      setLocationError("Please enter a city or state. (Or type 'Remote' if you want to compete nationally)");
                       return;
                     }
+                    setLocationError("");
                     setSearchStart(0);
                     fetchJobs(searchRole, searchLoc, 0);
                   }
@@ -229,14 +231,18 @@ function App() {
                 type="text" 
                 placeholder="Location (e.g. New York, Remote)" 
                 value={searchLoc}
-                onChange={(e) => setSearchLoc(e.target.value)}
+                onChange={(e) => {
+                  setSearchLoc(e.target.value);
+                  setLocationError(""); // clear error on type
+                }}
                 style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     if (!searchLoc.trim()) {
-                      alert("Please enter a city or state. (Or type 'Remote' if you want to compete nationally)");
+                      setLocationError("Please enter a city or state. (Or type 'Remote' if you want to compete nationally)");
                       return;
                     }
+                    setLocationError("");
                     setSearchStart(0);
                     fetchJobs(searchRole, searchLoc, 0);
                   }
@@ -246,9 +252,10 @@ function App() {
                 className="btn btn-primary" 
                 onClick={() => {
                   if (!searchLoc.trim()) {
-                    alert("Please enter a city or state. (Or type 'Remote' if you want to compete nationally)");
+                    setLocationError("Please enter a city or state. (Or type 'Remote' if you want to compete nationally)");
                     return;
                   }
+                  setLocationError("");
                   setSearchStart(0);
                   fetchJobs(searchRole, searchLoc, 0);
                 }}
@@ -257,7 +264,12 @@ function App() {
                 🔍 Search
               </button>
             </div>
-            <div className="job-list-feed" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem', maxHeight: '75vh', overflowY: 'auto', paddingRight: '1rem', alignItems: 'start' }}>
+            {locationError && (
+              <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '1.5rem', fontWeight: 'bold' }}>
+                ⚠️ {locationError}
+              </div>
+            )}
+            <div className="job-list-feed" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem', maxHeight: '75vh', overflowY: 'auto', paddingRight: '1rem', alignItems: 'start', marginTop: locationError ? '0' : '1.5rem' }}>
               {jobsLoading ? (
                 <div className="glass-panel job-card animate-fade-in" style={{ textAlign: 'center', padding: '4rem 2rem', gridColumn: '1 / -1' }}>
                   <div style={{ fontSize: '3rem', marginBottom: '1rem', animation: 'spin 2s linear infinite' }}>🤖</div>

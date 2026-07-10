@@ -169,8 +169,9 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
             query = q.lower()
             location = l.lower().strip()
             
-            # The frontend now explicitly blocks empty location searches, 
-            # so we only process the jobs based on intentional user input.
+            # Backend Safety Net: Reject empty location requests
+            if not location:
+                return {"status": "error", "message": "Backend Error: A valid Location parameter is strictly required."}
             
             for item in data.get("data", []):
                 title = item.get("title", "")
