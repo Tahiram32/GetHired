@@ -518,9 +518,7 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
             if not query:
                 return {"status": "error", "message": "Backend Error: A valid Role parameter is strictly required."}
             
-            serpapi_key = os.getenv("SERPAPI_KEY")
-            if not serpapi_key:
-                raise Exception("SERPAPI_KEY is not configured in the environment.")
+            serpapi_key = get_serpapi_key()
 
             url = "https://serpapi.com/search.json"
             params = {
