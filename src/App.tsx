@@ -133,6 +133,62 @@ function App() {
   const [userAnswer, setUserAnswer] = useState("");
   const [feedback, setFeedback] = useState("");
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
+  
+  const [sessionData, setSessionData] = useState<{question: string, answer: string, feedback: string}[]>([]);
+  const [interviewHistory, setInterviewHistory] = useState<any[]>(() => {
+    const saved = localStorage.getItem("gethired_interview_history");
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [hint, setHint] = useState("");
+  const [isLoadingHint, setIsLoadingHint] = useState(false);
+  const [scorecard, setScorecard] = useState<any>(null);
+  const [isGeneratingScorecard, setIsGeneratingScorecard] = useState(false);
+
+  React.useEffect(() => {
+    localStorage.setItem("gethired_interview_history", JSON.stringify(interviewHistory));
+  }, [interviewHistory]);
+
+  const getHint = async () => {
+    setIsLoadingHint(true);
+    setHint("");
+    const formData = new FormData();
+    formData.append("question", interviewQuestions[questionIndex]);
+    try {
+      const response = await fetch("http://localhost:8001/api/interview-hint", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setHint(data.hint);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoadingHint(false);
+    }
+  };
+
+  const generateScorecard = async () => {
+    setIsGeneratingScorecard(true);
+    const formData = new FormData();
+    formData.append("session_data", JSON.stringify(sessionData));
+    try {
+      const response = await fetch("http://localhost:8001/api/interview-scorecard", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setScorecard(data);
+        setInterviewHistory(prev => [...prev, { date: new Date().toISOString(), scorecard: data }]);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsGeneratingScorecard(false);
+    }
+  };
 
   const submitAnswer = async () => {
     if (!userAnswer.trim()) return;
@@ -149,6 +205,7 @@ function App() {
       const data = await response.json();
       if (data.status === "success") {
         setFeedback(data.feedback);
+        setSessionData(prev => [...prev, { question: interviewQuestions[questionIndex], answer: userAnswer, feedback: data.feedback }]);
       } else {
         alert("Error: " + data.message);
       }
@@ -551,57 +608,115 @@ function App() {
               </button>
             </div>
             <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: 0 }}>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
-                <h3 style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>Question {questionIndex + 1} of {interviewQuestions.length}</h3>
-                <p style={{ fontSize: '1.2rem', lineHeight: '1.5' }}>{interviewQuestions[questionIndex]}</p>
-              </div>
-
-              <div>
-                <textarea 
-                  className="input-field" 
-                  style={{ minHeight: '150px', resize: 'vertical' }} 
-                  placeholder="Type your answer here, or use your OS dictation tool to speak your response..."
-                  value={userAnswer}
-                  onChange={(e) => setUserAnswer(e.target.value)}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button 
-                  className="btn btn-primary" 
-                  style={{ flex: 1 }}
-                  onClick={submitAnswer}
-                  disabled={isSubmittingAnswer || !userAnswer.trim()}
-                >
-                  {isSubmittingAnswer ? "Analyzing..." : "Submit Answer"}
-                </button>
-                <button 
-                  className="btn btn-secondary" 
-                  onClick={() => {
-                    if (questionIndex + 1 >= interviewQuestions.length - 1) {
-                        fetchInterviewQuestions();
-                    }
-                    setQuestionIndex((prev) => prev + 1);
+              {scorecard ? (
+                <div className="animate-fade-in" style={{ textAlign: 'center' }}>
+                  <h2 style={{ fontSize: '2rem', marginBottom: '1.5rem', color: 'var(--accent-primary)' }}>Post-Interview Scorecard</h2>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem', textAlign: 'left' }}>
+                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                      <h3 style={{ color: 'var(--success)', marginBottom: '0.5rem' }}>💪 Top Strength</h3>
+                      <p>{scorecard.top_strength}</p>
+                    </div>
+                    <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                      <h3 style={{ color: 'var(--danger)', marginBottom: '0.5rem' }}>⚠️ Biggest Blind Spot</h3>
+                      <p>{scorecard.biggest_blind_spot}</p>
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '8px', textAlign: 'left' }}>
+                    <h3 style={{ marginBottom: '0.5rem' }}>Coaching Summary</h3>
+                    <p style={{ lineHeight: '1.6' }}>{scorecard.summary}</p>
+                  </div>
+                  <button className="btn btn-primary" style={{ marginTop: '2rem', padding: '1rem 3rem' }} onClick={() => {
+                    setSessionData([]);
+                    setScorecard(null);
+                    setQuestionIndex(0);
                     setUserAnswer("");
                     setFeedback("");
-                  }} 
-                  disabled={questionsLoading && questionIndex === interviewQuestions.length - 1}
-                >
-                  {questionsLoading && questionIndex === interviewQuestions.length - 1 ? "Generating..." : "Next Question ➡️"}
-                </button>
-              </div>
-
-              {feedback && (
-                <div className="animate-fade-in" style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)', marginTop: '1rem' }}>
-                  <h3 style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>Hiring Manager Feedback</h3>
-                  <p style={{ fontSize: '1rem', lineHeight: '1.6', whiteSpace: 'pre-line' }}>{feedback}</p>
+                    setHint("");
+                    fetchInterviewQuestions();
+                  }}>Start New Session</button>
                 </div>
+              ) : (
+                <>
+                  <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <h3 style={{ color: 'var(--accent-primary)' }}>Question {questionIndex + 1} of 5</h3>
+                    </div>
+                    <p style={{ fontSize: '1.2rem', lineHeight: '1.5' }}>{interviewQuestions[questionIndex]}</p>
+                    
+                    {hint && (
+                      <div className="animate-fade-in" style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.1)', borderLeft: '4px solid #f59e0b', color: '#f59e0b' }}>
+                        <strong>💡 Hint: </strong>{hint}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <textarea 
+                      className="input-field" 
+                      style={{ minHeight: '150px', resize: 'vertical' }} 
+                      placeholder="Type your answer here, or use your OS dictation tool to speak your response..."
+                      value={userAnswer}
+                      onChange={(e) => setUserAnswer(e.target.value)}
+                      disabled={!!feedback}
+                    />
+                  </div>
+
+                  {!feedback ? (
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                      <button 
+                        className="btn btn-primary" 
+                        style={{ flex: 1 }}
+                        onClick={submitAnswer}
+                        disabled={isSubmittingAnswer || !userAnswer.trim()}
+                      >
+                        {isSubmittingAnswer ? "Submitting..." : "Submit Answer"}
+                      </button>
+                      <button 
+                        className="btn btn-secondary" 
+                        onClick={getHint} 
+                        disabled={isLoadingHint || !!hint}
+                      >
+                        {isLoadingHint ? "..." : "Hint 💡"}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                      <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                        <h3 style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>Hiring Manager Feedback</h3>
+                        <p style={{ fontSize: '1rem', lineHeight: '1.6', whiteSpace: 'pre-line' }}>{feedback}</p>
+                      </div>
+                      
+                      {questionIndex + 1 < 5 ? (
+                        <button 
+                          className="btn btn-primary" 
+                          onClick={() => {
+                            setQuestionIndex((prev) => prev + 1);
+                            setUserAnswer("");
+                            setFeedback("");
+                            setHint("");
+                          }}
+                        >
+                          Next Question ➡️
+                        </button>
+                      ) : (
+                        <button 
+                          className="btn btn-primary" 
+                          style={{ background: 'var(--success)' }}
+                          onClick={generateScorecard}
+                          disabled={isGeneratingScorecard}
+                        >
+                          {isGeneratingScorecard ? "Generating Scorecard..." : "View Performance Scorecard 📊"}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
         );
 
-      case 'kanban':
+case 'kanban':
         const appliedJobs = trackerJobs.filter(j => j.status === 'Applied');
         const interviewingJobs = trackerJobs.filter(j => j.status === 'Interviewing');
         const offerJobs = trackerJobs.filter(j => j.status === 'Offers');

@@ -306,11 +306,10 @@ async def get_interview_feedback(question: str = Form(...), answer: str = Form(.
         return {"status": "error", "message": "OpenAI client not configured."}
     
     system_instruction = """
-    You are a strict, professional hiring manager. The user will provide an interview question and their text-based answer.
-    Analyze the substance of their answer. Provide harsh but constructive feedback focusing on the content, clarity, and completeness.
-    Do NOT comment on tone, pacing, or audio/video quality, as this is a text-based exercise.
-    Advise them on how to improve their answer, for example by using the STAR method (Situation, Task, Action, Result) if they forgot to give specific examples.
-    Keep your feedback concise, actionable, and in the voice of a hiring manager.
+    You are a strict, professional hiring manager providing a post-answer coaching moment. The user will provide an interview question and their text-based answer.
+    Critique their answer focusing on content, clarity, and completeness. Do NOT break character as a hiring manager.
+    CRITICAL RULE (Critique + Exemplar): You MUST explicitly rewrite their answer using the STAR method (Situation, Task, Action, Result) so they can see exactly how the structure should look. Show them the Gold Standard answer.
+    Do NOT comment on tone, pacing, or audio/video quality. Keep your feedback actionable and direct.
     """
     
     try:
@@ -326,6 +325,72 @@ async def get_interview_feedback(question: str = Form(...), answer: str = Form(.
         return {
             "status": "success",
             "feedback": response.choices[0].message.parsed.feedback
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+class InterviewHintResult(BaseModel):
+    hint: str
+
+@app.post("/api/interview-hint")
+async def get_interview_hint(question: str = Form(...)):
+    if not client:
+        return {"status": "error", "message": "OpenAI client not configured."}
+    
+    system_instruction = """
+    You are a strict hiring manager. The candidate is stuck on an interview question. 
+    Provide a single-sentence hint to help them pivot or structure their answer (e.g., "Think about a time you had a conflict with a stakeholder and how you resolved it"). 
+    Do not answer the question for them.
+    """
+    try:
+        response = client.beta.chat.completions.parse(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": f"Question: {question}"}
+            ],
+            response_format=InterviewHintResult,
+            temperature=0.7
+        )
+        return {"status": "success", "hint": response.choices[0].message.parsed.hint}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+class InterviewScorecardResult(BaseModel):
+    top_strength: str
+    biggest_blind_spot: str
+    summary: str
+
+@app.post("/api/interview-scorecard")
+async def generate_interview_scorecard(session_data: str = Form(...)):
+    if not client:
+        return {"status": "error", "message": "OpenAI client not configured."}
+    
+    system_instruction = """
+    You are an expert career coach reviewing a completed 5-question interview session.
+    You will receive a JSON string containing the questions, the user's answers, and the hiring manager's feedback.
+    Generate a Post-Interview Scorecard.
+    Identify their Top Strength (1 sentence).
+    Identify their Biggest Blind Spot (e.g., "You consistently fail to quantify your impact in your answers" - 1 sentence).
+    Provide a short coaching summary (2-3 sentences).
+    """
+    try:
+        response = client.beta.chat.completions.parse(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": session_data}
+            ],
+            response_format=InterviewScorecardResult,
+            temperature=0.7
+        )
+        parsed = response.choices[0].message.parsed
+        return {
+            "status": "success",
+            "top_strength": parsed.top_strength,
+            "biggest_blind_spot": parsed.biggest_blind_spot,
+            "summary": parsed.summary
         }
     except Exception as e:
         return {"status": "error", "message": str(e)}
