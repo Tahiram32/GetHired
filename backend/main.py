@@ -91,6 +91,16 @@ class CoachingInsight(BaseModel):
 class CoachingRequest(BaseModel):
     aspirational_baseline: Optional[str] = None
 
+class ResumeRewrite(BaseModel):
+    original_bullet: str = Field(..., description="The original bullet point from the resume")
+    suggested_rewrite: str = Field(..., description="The optimized bullet point incorporating the skill gap")
+    skill_addressed: str = Field(..., description="The skill this rewrite addresses")
+    reasoning: str = Field(..., description="Why this rewrite is better for ATS")
+
+class ResumeOptimizationResponse(BaseModel):
+    rewrites: List[ResumeRewrite] = Field(..., description="List of suggested bullet point rewrites")
+    general_advice: str = Field(..., description="Overall advice for tailoring the resume to the target role")
+
 class KanbanColumn(SQLModel, table=True):
     __tablename__ = "kanban_columns"
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -439,6 +449,43 @@ You must completely ignore 'Nice to Have', 'Bonus', or 'Preferred Qualifications
     except Exception as e:
         logger.error(f"Failed to generate coaching insight: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate coaching insight")
+
+@app.post("/api/resume/optimize")
+async def optimize_resume(file: UploadFile = File(...), skill_gaps: str = Form(...)):
+    try:
+        with pdfplumber.open(file.file) as pdf:
+            resume_text = "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
+    except Exception as e:
+        logger.error(f"Failed to read PDF: {e}")
+        raise HTTPException(status_code=400, detail="Failed to parse PDF resume. Please ensure it is a valid text-based PDF.")
+        
+    if not resume_text or len(resume_text.strip()) < 100:
+        raise HTTPException(status_code=400, detail="Could not extract sufficient text from the PDF. Is it an image-based scan?")
+        
+    prompt = f"""You are an expert technical recruiter and ATS optimization specialist.
+The user has provided their current resume and a list of identified 'Skill Gaps' for their target role.
+Your goal is to suggest rewrites for specific bullet points in their resume to naturally incorporate these missing skills.
+If the user's experience suggests they possess the foundational knowledge, reframe their existing bullets to explicitly use the missing ATS keywords. Do not fabricate entire jobs, but heavily optimize the phrasing.
+
+[IDENTIFIED SKILL GAPS]
+{skill_gaps}
+
+[USER RESUME]
+{resume_text}
+"""
+    try:
+        response = get_openai_client().beta.chat.completions.parse(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a resume optimizer. Return the JSON object following the strict schema."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format=ResumeOptimizationResponse
+        )
+        return response.choices[0].message.parsed
+    except Exception as e:
+        logger.error(f"Failed to generate resume optimization: {e}")
+        raise HTTPException(status_code=500, detail="Failed to optimize resume.")
 
 @app.get("/api/jobs")
 async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
