@@ -3,11 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 import pdfplumber
 import os
 import json
+import stat
 import requests
 import urllib.parse
 import concurrent.futures
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+import openai
 from openai import OpenAI
 from pydantic import BaseModel, Field
 from typing import List
@@ -16,6 +18,7 @@ app = FastAPI(title="GetHired API")
 
 import platform
 import json
+import stat
 
 def get_app_dir():
     system = platform.system()
@@ -66,11 +69,26 @@ async def get_settings():
 
 @app.post("/api/settings")
 async def update_settings(settings: SettingsUpdate):
+    try:
+        temp_client = OpenAI(api_key=settings.openai_key)
+        temp_client.models.list()
+    except openai.AuthenticationError:
+        raise HTTPException(status_code=401, detail="Invalid API Key. Please double check your OpenAI key.")
+    except openai.RateLimitError:
+        raise HTTPException(status_code=429, detail="API Quota Exceeded. Please ensure you have added a $5 minimum balance to your OpenAI account.")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
     keys = get_keys()
     keys["openai_key"] = settings.openai_key
     keys["serpapi_key"] = settings.serpapi_key
+    
     with open(CONFIG_FILE, "w") as f:
         json.dump(keys, f)
+        
+    if platform.system() != "Windows":
+        os.chmod(CONFIG_FILE, stat.S_IRUSR | stat.S_IWUSR)
+        
     return {"status": "success"}
 
 app.add_middleware(

@@ -6,6 +6,12 @@ echo "a minute or two on your first run. Please wait..."
 echo "==================================================="
 echo ""
 
+echo "[0/3] Cleaning up old processes..."
+if command -v lsof &> /dev/null; then
+    lsof -ti:8001 | xargs kill -9 2>/dev/null
+    lsof -ti:5173 | xargs kill -9 2>/dev/null
+fi
+
 echo "[1/3] Checking system requirements..."
 if ! command -v python3 &> /dev/null; then
     echo "[ERROR] Python3 is not installed."
