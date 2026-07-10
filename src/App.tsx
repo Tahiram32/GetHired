@@ -199,7 +199,7 @@ function App() {
                 <div className="glass-panel job-card animate-fade-in" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
                   <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎉</div>
                   <h2 style={{ marginBottom: '1rem' }}>You're all caught up!</h2>
-                  <p style={{ color: 'var(--text-muted)' }}>We are scraping the web for more matching jobs. Check back in a few hours.</p>
+                  <p style={{ color: 'var(--text-muted)' }}>The AI is scraping the web for more matching jobs. Check back in a few hours.</p>
                 </div>
               )}
             </div>
@@ -312,7 +312,7 @@ function App() {
                         
                         <div style={{ marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                           <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.25rem' }}>✨ Copy these into your Resume</h4>
-                          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>We rewrote your experience to include the exact keywords this company's ATS filter is looking for. Swap your old bullets with these before you apply!</p>
+                          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>The AI rewrote your experience to include the exact keywords this company's ATS filter is looking for. Swap your old bullets with these before you apply!</p>
                         </div>
                         <ul style={{ paddingLeft: '1.2rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                           {atsResult.tailored_bullets.map((bullet: string, i: number) => (
@@ -343,7 +343,7 @@ function App() {
           <div className="animate-fade-in">
             <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>Interview <span className="text-gradient">Simulator</span></h1>
             <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-              We know interviewing is incredibly stressful. Practice here first to build your confidence in a safe space.
+              Interviewing is incredibly stressful. Practice here first to build your confidence in a safe space.
             </p>
             <div className="dashboard-grid" style={{ marginTop: 0 }}>
               <div className="glass-panel" style={{ padding: '1rem', height: '400px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
@@ -444,7 +444,7 @@ function App() {
           <div className="animate-fade-in">
             <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>Fair Pay <span className="text-gradient">Advocate</span></h1>
             <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-              Companies are leveraging the bad economy to lowball candidates. We will help you review your offer and provide respectful, professional scripts to ask for what you deserve.
+              Companies are leveraging the bad economy to lowball candidates. The AI will help you review your offer and provide respectful, professional scripts to ask for what you deserve.
             </p>
             <div className="dashboard-grid">
               <div className="card glass-panel" style={{ gridColumn: 'span 2' }}>
