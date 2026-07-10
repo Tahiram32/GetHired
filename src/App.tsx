@@ -145,12 +145,38 @@ function App() {
   const [isGeneratingScorecard, setIsGeneratingScorecard] = useState(false);
   const [showScorecardScreen, setShowScorecardScreen] = useState(false);
   const [scorecardError, setScorecardError] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   React.useEffect(() => {
     localStorage.setItem("gethired_interview_history", JSON.stringify(interviewHistory));
   }, [interviewHistory]);
 
 
+
+  const retryScorecard = async () => {
+    setIsRetrying(true);
+    const formData = new FormData();
+    formData.append("session_data", JSON.stringify(sessionData.map(s => ({ question: s.question, answer: s.answer }))));
+    try {
+      const response = await fetch("http://localhost:8001/api/interview-scorecard", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setScorecard(data);
+        setInterviewHistory(prev => [...prev, { date: new Date().toISOString(), scorecard: data }]);
+        setScorecardError(false);
+      } else {
+        setScorecardError(true);
+      }
+    } catch (err) {
+      console.error(err);
+      setScorecardError(true);
+    } finally {
+      setIsRetrying(false);
+    }
+  };
 
   const generateScorecard = async () => {
     setShowScorecardScreen(true);
@@ -621,8 +647,13 @@ function App() {
                       <div style={{ padding: '2rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--danger)', borderRadius: '8px' }}>
                         <h3 style={{ color: 'var(--danger)', marginBottom: '1rem' }}>⚠️ API Connection Failed</h3>
                         <p style={{ marginBottom: '1.5rem', lineHeight: '1.6' }}>We could not reach the server to generate your coaching scorecard due to a network timeout.</p>
-                        <button className="btn btn-primary" style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={generateScorecard}>
-                          🔄 Retry Connection
+                        <button 
+                          className="btn btn-primary" 
+                          style={{ background: 'var(--danger)', borderColor: 'var(--danger)', opacity: isRetrying ? 0.7 : 1 }} 
+                          onClick={retryScorecard}
+                          disabled={isRetrying}
+                        >
+                          {isRetrying ? "🔄 Retrying Connection..." : "🔄 Retry Connection"}
                         </button>
                       </div>
                       
