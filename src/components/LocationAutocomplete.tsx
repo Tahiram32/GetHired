@@ -49,17 +49,23 @@ export function LocationAutocomplete({ value, onChange, placeholder = "City, Sta
       return;
     }
 
+    const maxIndex = filteredLocations.length === 0 && value.trim() !== '' ? 0 : filteredLocations.length - 1;
+    
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setHighlightedIndex(prev => 
-        prev < filteredLocations.length - 1 ? prev + 1 : prev
-      );
+      setHighlightedIndex(prev => prev < maxIndex ? prev + 1 : prev);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setHighlightedIndex(prev => prev > 0 ? prev - 1 : 0);
-    } else if (e.key === 'Enter' && highlightedIndex >= 0) {
-      e.preventDefault();
-      handleSelect(filteredLocations[highlightedIndex]);
+    } else if (e.key === 'Enter') {
+      if (highlightedIndex >= 0 && filteredLocations.length > 0) {
+        e.preventDefault();
+        handleSelect(filteredLocations[highlightedIndex]);
+      } else if (filteredLocations.length === 0 && value.trim() !== '') {
+        e.preventDefault();
+        setIsOpen(false);
+        if (onEnter) onEnter();
+      }
     } else if (e.key === 'Escape') {
       setIsOpen(false);
     }
@@ -79,7 +85,7 @@ export function LocationAutocomplete({ value, onChange, placeholder = "City, Sta
         onFocus={() => setIsOpen(true)}
         onKeyDown={(e) => {
           handleKeyDown(e);
-          if (e.key === 'Enter' && highlightedIndex === -1 && onEnter) {
+          if (e.key === 'Enter' && highlightedIndex === -1 && onEnter && filteredLocations.length > 0) {
             onEnter();
             setIsOpen(false);
           }
@@ -120,6 +126,25 @@ export function LocationAutocomplete({ value, onChange, placeholder = "City, Sta
               {loc.label}
             </li>
           ))}
+          {filteredLocations.length === 0 && value.trim() !== '' && (
+            <li
+              onClick={() => {
+                setIsOpen(false);
+                if (onEnter) onEnter();
+              }}
+              onMouseEnter={() => setHighlightedIndex(0)}
+              style={{
+                padding: '0.75rem 1rem',
+                cursor: 'pointer',
+                background: highlightedIndex === 0 ? 'var(--bg-hover)' : 'transparent',
+                color: 'var(--text-secondary)',
+                borderBottom: '1px solid var(--border)',
+                fontStyle: 'italic'
+              }}
+            >
+              ⚠️ Search unverified location: "{value}"
+            </li>
+          )}
         </ul>
       )}
     </div>
