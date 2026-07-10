@@ -387,17 +387,14 @@ function App() {
                   }
                 }}
               />
-              <input 
-                type="text" 
-                placeholder="Location (e.g. New York, Remote)" 
+              <LocationAutocomplete 
                 value={searchLoc}
-                onChange={(e) => {
-                  setSearchLoc(e.target.value);
-                  setLocationError(""); // clear error on type
+                onChange={(val) => {
+                  setSearchLoc(val);
+                  setLocationError("");
                 }}
-                style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                placeholder="Location (e.g. New York, Remote)"
+                onEnter={() => {
                     if (!searchRole.trim()) {
                       setRoleError("What kind of role are you looking for?");
                       return;
@@ -410,7 +407,6 @@ function App() {
                     setLocationError("");
                     setSearchStart(0);
                     fetchJobs(searchRole, searchLoc, 0);
-                  }
                 }}
               />
               <button 
