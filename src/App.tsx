@@ -125,9 +125,10 @@ function App() {
   const [interviewRole, setInterviewRole] = useState("");
   const [questionIndex, setQuestionIndex] = useState(0);
 
-  const [interviewQuestions, setInterviewQuestions] = useState<string[]>([
-    "Loading customized interview questions for your role..."
+  const [interviewQuestions, setInterviewQuestions] = useState<{question: string, hint: string}[]>([
+    { question: "Loading customized interview questions for your role...", hint: "" }
   ]);
+  const [showHint, setShowHint] = useState(false);
   const [questionsLoading, setQuestionsLoading] = useState(false);
 
   const [userAnswer, setUserAnswer] = useState("");
@@ -139,8 +140,7 @@ function App() {
     const saved = localStorage.getItem("gethired_interview_history");
     return saved ? JSON.parse(saved) : [];
   });
-  const [hint, setHint] = useState("");
-  const [isLoadingHint, setIsLoadingHint] = useState(false);
+
   const [scorecard, setScorecard] = useState<any>(null);
   const [isGeneratingScorecard, setIsGeneratingScorecard] = useState(false);
 
@@ -148,31 +148,12 @@ function App() {
     localStorage.setItem("gethired_interview_history", JSON.stringify(interviewHistory));
   }, [interviewHistory]);
 
-  const getHint = async () => {
-    setIsLoadingHint(true);
-    setHint("");
-    const formData = new FormData();
-    formData.append("question", interviewQuestions[questionIndex]);
-    try {
-      const response = await fetch("http://localhost:8001/api/interview-hint", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await response.json();
-      if (data.status === "success") {
-        setHint(data.hint);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoadingHint(false);
-    }
-  };
+
 
   const generateScorecard = async () => {
     setIsGeneratingScorecard(true);
     const formData = new FormData();
-    formData.append("session_data", JSON.stringify(sessionData));
+    formData.append("session_data", JSON.stringify(sessionData.map(s => ({ question: s.question, answer: s.answer }))));
     try {
       const response = await fetch("http://localhost:8001/api/interview-scorecard", {
         method: "POST",
@@ -195,7 +176,7 @@ function App() {
     setIsSubmittingAnswer(true);
     setFeedback("");
     const formData = new FormData();
-    formData.append("question", interviewQuestions[questionIndex]);
+    formData.append("question", interviewQuestions[questionIndex]?.question);
     formData.append("answer", userAnswer);
     try {
       const response = await fetch("http://localhost:8001/api/interview-feedback", {
@@ -205,7 +186,7 @@ function App() {
       const data = await response.json();
       if (data.status === "success") {
         setFeedback(data.feedback);
-        setSessionData(prev => [...prev, { question: interviewQuestions[questionIndex], answer: userAnswer, feedback: data.feedback }]);
+        setSessionData(prev => [...prev, { question: interviewQuestions[questionIndex]?.question, answer: userAnswer, feedback: data.feedback }]);
       } else {
         alert("Error: " + data.message);
       }
@@ -225,7 +206,7 @@ function App() {
       const response = await fetch(`http://localhost:8001/api/interview-questions?role=${encodeURIComponent(roleToUse)}`);
       const data = await response.json();
       if (data.status === "success" && data.questions.length > 0) {
-        setInterviewQuestions(prev => prev.length === 1 && prev[0].includes("Loading") || roleOverride ? data.questions : [...prev, ...data.questions]);
+        setInterviewQuestions(prev => prev.length === 1 && prev[0].question.includes("Loading") || roleOverride ? data.questions : [...prev, ...data.questions]);
         if (roleOverride) setQuestionIndex(0);
       }
     } catch (err) {
@@ -236,7 +217,7 @@ function App() {
   };
 
   React.useEffect(() => {
-    if (activeTab === 'interview' && interviewQuestions.length === 1 && interviewQuestions[0].includes("Loading")) {
+    if (activeTab === 'interview' && interviewQuestions.length === 1 && interviewQuestions[0].question.includes("Loading")) {
       fetchInterviewQuestions();
     }
   }, [activeTab]);
@@ -631,7 +612,7 @@ function App() {
                     setQuestionIndex(0);
                     setUserAnswer("");
                     setFeedback("");
-                    setHint("");
+                    setShowHint(false);
                     fetchInterviewQuestions();
                   }}>Start New Session</button>
                 </div>
@@ -641,11 +622,11 @@ function App() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                       <h3 style={{ color: 'var(--accent-primary)' }}>Question {questionIndex + 1} of 5</h3>
                     </div>
-                    <p style={{ fontSize: '1.2rem', lineHeight: '1.5' }}>{interviewQuestions[questionIndex]}</p>
+                    <p style={{ fontSize: '1.2rem', lineHeight: '1.5' }}>{interviewQuestions[questionIndex]?.question}</p>
                     
-                    {hint && (
+                    {showHint && interviewQuestions[questionIndex]?.hint && (
                       <div className="animate-fade-in" style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.1)', borderLeft: '4px solid #f59e0b', color: '#f59e0b' }}>
-                        <strong>💡 Hint: </strong>{hint}
+                        <strong>💡 Hint: </strong>{interviewQuestions[questionIndex].hint}
                       </div>
                     )}
                   </div>
@@ -673,10 +654,10 @@ function App() {
                       </button>
                       <button 
                         className="btn btn-secondary" 
-                        onClick={getHint} 
-                        disabled={isLoadingHint || !!hint}
+                        onClick={() => setShowHint(true)} 
+                        disabled={showHint}
                       >
-                        {isLoadingHint ? "..." : "Hint 💡"}
+                        {"Hint 💡"}
                       </button>
                     </div>
                   ) : (
@@ -693,7 +674,7 @@ function App() {
                             setQuestionIndex((prev) => prev + 1);
                             setUserAnswer("");
                             setFeedback("");
-                            setHint("");
+                            setShowHint(false);
                           }}
                         >
                           Next Question ➡️

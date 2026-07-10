@@ -269,15 +269,19 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+class QuestionObj(BaseModel):
+    question: str
+    hint: str
+
 class InterviewQuestionsResult(BaseModel):
-    questions: List[str]
+    questions: List[QuestionObj]
 
 @app.get("/api/interview-questions")
 async def get_interview_questions(role: str = "Software Engineer"):
     if not client:
         return {"status": "error", "message": "OpenAI client not configured."}
     
-    system_instruction = "You are a strict, professional hiring manager. Generate exactly 5 short, realistic interview questions for the provided role. Real interviews are dynamic back-and-forths, not massive paragraphs. Keep each question to a single sentence or two. Make them situational and challenging."
+    system_instruction = "You are a strict, professional hiring manager. Generate exactly 5 short, realistic interview questions for the provided role, along with a 1-sentence hint for each to help a candidate who gets stuck. Real interviews are dynamic back-and-forths. Keep each question to a single sentence or two. Make them situational and challenging."
     
     try:
         response = client.beta.chat.completions.parse(
@@ -306,10 +310,10 @@ async def get_interview_feedback(question: str = Form(...), answer: str = Form(.
         return {"status": "error", "message": "OpenAI client not configured."}
     
     system_instruction = """
-    You are a strict, professional hiring manager providing a post-answer coaching moment. The user will provide an interview question and their text-based answer.
-    Critique their answer focusing on content, clarity, and completeness. Do NOT break character as a hiring manager.
+    You are an expert, supportive Career Coach providing a post-answer coaching moment. The user will provide an interview question and their text-based answer.
+    Critique their answer focusing on content, clarity, and completeness in a supportive but highly analytical tone.
     CRITICAL RULE (Critique + Exemplar): You MUST explicitly rewrite their answer using the STAR method (Situation, Task, Action, Result) so they can see exactly how the structure should look. Show them the Gold Standard answer.
-    Do NOT comment on tone, pacing, or audio/video quality. Keep your feedback actionable and direct.
+    Do NOT comment on tone, pacing, or audio/video quality.
     """
     
     try:
@@ -330,32 +334,6 @@ async def get_interview_feedback(question: str = Form(...), answer: str = Form(.
         return {"status": "error", "message": str(e)}
 
 
-class InterviewHintResult(BaseModel):
-    hint: str
-
-@app.post("/api/interview-hint")
-async def get_interview_hint(question: str = Form(...)):
-    if not client:
-        return {"status": "error", "message": "OpenAI client not configured."}
-    
-    system_instruction = """
-    You are a strict hiring manager. The candidate is stuck on an interview question. 
-    Provide a single-sentence hint to help them pivot or structure their answer (e.g., "Think about a time you had a conflict with a stakeholder and how you resolved it"). 
-    Do not answer the question for them.
-    """
-    try:
-        response = client.beta.chat.completions.parse(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": system_instruction},
-                {"role": "user", "content": f"Question: {question}"}
-            ],
-            response_format=InterviewHintResult,
-            temperature=0.7
-        )
-        return {"status": "success", "hint": response.choices[0].message.parsed.hint}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
 
 class InterviewScorecardResult(BaseModel):
     top_strength: str
