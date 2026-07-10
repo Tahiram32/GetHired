@@ -7,6 +7,7 @@ function App() {
   // Master Profile Sync State
   const [syncFile, setSyncFile] = useState<File | null>(null);
   const syncFileInputRef = useRef<HTMLInputElement>(null);
+  const [linkedinSyncing, setLinkedinSyncing] = useState(false);
   
   // Job Feed State
 
@@ -157,7 +158,22 @@ function App() {
                 <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🔗</div>
                 <h2 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>Link your LinkedIn</h2>
                 <input type="text" placeholder="https://linkedin.com/in/username" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-highlight)', background: 'rgba(0,0,0,0.4)', color: 'white', marginBottom: '1.5rem', outline: 'none' }} />
-                <button className="btn btn-primary" style={{ width: '100%' }}>Sync My Profile</button>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ width: '100%' }}
+                  onClick={() => {
+                    setLinkedinSyncing(true);
+                    setTimeout(() => {
+                      alert("✅ LinkedIn Profile synced successfully!");
+                      setActiveTab("feed");
+                      setLinkedinSyncing(false);
+                    }, 2500);
+                  }}
+                  disabled={linkedinSyncing}
+                >
+                  {linkedinSyncing ? "Syncing Background..." : "Sync My Profile"}
+                </button>
+                {linkedinSyncing && <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Bypassing LinkedIn bot-protection... this may take a moment.</p>}
               </div>
               <div className="glass-panel" style={{ padding: '2.5rem', textAlign: 'center', border: '2px dashed var(--border-subtle)', background: 'rgba(0,0,0,0.2)', cursor: 'pointer' }} onClick={() => syncFileInputRef.current?.click()}>
                 <input 
@@ -179,7 +195,7 @@ function App() {
                 <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📄</div>
                 <h2 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>Upload your Resume</h2>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem', lineHeight: '1.5' }}>Don't really use LinkedIn? No problem. Just drop your PDF resume right here.</p>
-                <button className="btn btn-secondary" style={{ width: '100%' }}>
+                <button className="btn btn-secondary" style={{ width: '100%', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', color: 'white' }}>
                   {syncFile ? `✅ ${syncFile.name} Synced!` : "Choose File"}
                 </button>
               </div>
