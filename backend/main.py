@@ -167,7 +167,11 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
             data = res.json()
             
             query = q.lower()
-            location = l.lower()
+            location = l.lower().strip()
+            
+            # 1. Set a Hard Default if left empty
+            if not location:
+                location = "remote" # Defaulting to remote is highly effective for a broad US search
             
             for item in data.get("data", []):
                 title = item.get("title", "")
@@ -175,10 +179,22 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
                 loc = item.get("location", "")
                 desc = item.get("description", "")
                 
-                # Basic pre-filter to save OpenAI tokens
-                if query and query not in title.lower() and query not in desc.lower():
+                title_lower = title.lower()
+                loc_lower = loc.lower()
+                
+                # 2. Hard Filter: Drop German roles and enforce US/Remote boundaries
+                if "germany" in loc_lower or "m/w/d" in title_lower or "m/f/d" in title_lower:
                     continue
-                if location and location not in loc.lower():
+                
+                # If they searched a specific city/state, or we are using a broad default
+                if location == "united states" or location == "remote" or location == "us":
+                    if "united states" not in loc_lower and "us" not in loc_lower.split() and "remote" not in loc_lower:
+                        continue
+                elif location not in loc_lower:
+                    continue
+                
+                # Basic pre-filter to save OpenAI tokens
+                if query and query not in title_lower and query not in desc.lower():
                     continue
                     
                 api_jobs.append({
