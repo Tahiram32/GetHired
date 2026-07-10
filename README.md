@@ -12,7 +12,7 @@ The best part? **There are no accounts, no logins, and no paywalls.** Everything
 
 1. **🕵️ Protect You From Scams:** When you search for jobs, the AI assistant automatically reads the job descriptions in the background. It filters out unpaid internships, MLMs, and ghost jobs before they even reach your screen.
 2. **📈 Track Your Progress:** The second you find a job you like and click "Apply", the app automatically adds it to your personal Tracker Board. You can easily drag and drop your jobs from `Applied` to `Interviewing` to `Offers`.
-3. **🪄 Rewrite Your Resume:** Just paste in the job you want and upload your resume. The AI will tell you exactly what words to change so your resume beats the automated filters (Applicant Tracking Systems, or ATS) that companies use to reject applicants.
+3. **🪄 Rewrite Your Resume:** Just paste in the job you want and upload your resume. The AI will tell you exactly what words to change so your resume beats the automated filters (Applicant Tracking Systems, or ATS) that companies use to reject applicants. *(Note: GetHired intentionally does NOT generate cover letters, dedicating 100% of its processing power to optimizing the only document that actually beats the algorithm: your resume.)*
 4. **📊 Give You Real Advice:** As you apply to jobs, the app automatically tracks your callback rate and gives you honest, personalized advice on how the market is treating you.
 
 ---
