@@ -143,6 +143,8 @@ function App() {
 
   const [scorecard, setScorecard] = useState<any>(null);
   const [isGeneratingScorecard, setIsGeneratingScorecard] = useState(false);
+  const [showScorecardScreen, setShowScorecardScreen] = useState(false);
+  const [scorecardError, setScorecardError] = useState(false);
 
   React.useEffect(() => {
     localStorage.setItem("gethired_interview_history", JSON.stringify(interviewHistory));
@@ -151,7 +153,21 @@ function App() {
 
 
   const generateScorecard = async () => {
+    setShowScorecardScreen(true);
     setIsGeneratingScorecard(true);
+    setScorecardError(false);
+    
+    const totalChars = sessionData.reduce((acc, curr) => acc + curr.answer.length, 0);
+    if (totalChars < 50) {
+        setScorecard({
+            top_strength: "Needs more data",
+            biggest_blind_spot: "Short answers",
+            summary: "Keep practicing! We need a little more text to generate a full coaching scorecard. Try the mock interview again and aim for at least two sentences per answer."
+        });
+        setIsGeneratingScorecard(false);
+        return;
+    }
+
     const formData = new FormData();
     formData.append("session_data", JSON.stringify(sessionData.map(s => ({ question: s.question, answer: s.answer }))));
     try {
@@ -163,9 +179,12 @@ function App() {
       if (data.status === "success") {
         setScorecard(data);
         setInterviewHistory(prev => [...prev, { date: new Date().toISOString(), scorecard: data }]);
+      } else {
+        setScorecardError(true);
       }
     } catch (err) {
       console.error(err);
+      setScorecardError(true);
     } finally {
       setIsGeneratingScorecard(false);
     }
@@ -589,32 +608,50 @@ function App() {
               </button>
             </div>
             <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: 0 }}>
-              {scorecard ? (
+              {showScorecardScreen ? (
                 <div className="animate-fade-in" style={{ textAlign: 'center' }}>
-                  <h2 style={{ fontSize: '2rem', marginBottom: '1.5rem', color: 'var(--accent-primary)' }}>Post-Interview Scorecard</h2>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem', textAlign: 'left' }}>
-                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                      <h3 style={{ color: 'var(--success)', marginBottom: '0.5rem' }}>💪 Top Strength</h3>
-                      <p>{scorecard.top_strength}</p>
+                  <h2 style={{ fontSize: '2rem', marginBottom: '1.5rem', color: 'var(--accent-primary)' }}>Session Complete! 🎉</h2>
+                  {isGeneratingScorecard ? (
+                    <div style={{ padding: '3rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
+                      <div style={{ fontSize: '3rem', animation: 'spin 2s linear infinite' }}>🤖</div>
+                      <h3 style={{ color: 'var(--text-secondary)' }}>Analyzing your performance and generating your coaching scorecard...</h3>
                     </div>
-                    <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-                      <h3 style={{ color: 'var(--danger)', marginBottom: '0.5rem' }}>⚠️ Biggest Blind Spot</h3>
-                      <p>{scorecard.biggest_blind_spot}</p>
+                  ) : scorecardError ? (
+                    <div style={{ padding: '2rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--danger)', borderRadius: '8px' }}>
+                      <h3 style={{ color: 'var(--danger)', marginBottom: '1rem' }}>⚠️ Network Error</h3>
+                      <p style={{ marginBottom: '1.5rem' }}>We could not reach the server to generate your scorecard. Don't worry, your practice wasn't wasted, but we couldn't analyze the aggregate trends right now.</p>
                     </div>
-                  </div>
-                  <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '8px', textAlign: 'left' }}>
-                    <h3 style={{ marginBottom: '0.5rem' }}>Coaching Summary</h3>
-                    <p style={{ lineHeight: '1.6' }}>{scorecard.summary}</p>
-                  </div>
-                  <button className="btn btn-primary" style={{ marginTop: '2rem', padding: '1rem 3rem' }} onClick={() => {
-                    setSessionData([]);
-                    setScorecard(null);
-                    setQuestionIndex(0);
-                    setUserAnswer("");
-                    setFeedback("");
-                    setShowHint(false);
-                    fetchInterviewQuestions();
-                  }}>Start New Session</button>
+                  ) : scorecard && (
+                    <>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem', textAlign: 'left' }}>
+                        <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                          <h3 style={{ color: 'var(--success)', marginBottom: '0.5rem' }}>💪 Top Strength</h3>
+                          <p>{scorecard.top_strength}</p>
+                        </div>
+                        <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                          <h3 style={{ color: 'var(--danger)', marginBottom: '0.5rem' }}>⚠️ Biggest Blind Spot</h3>
+                          <p>{scorecard.biggest_blind_spot}</p>
+                        </div>
+                      </div>
+                      <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '8px', textAlign: 'left' }}>
+                        <h3 style={{ marginBottom: '0.5rem' }}>Coaching Summary</h3>
+                        <p style={{ lineHeight: '1.6', whiteSpace: 'pre-line' }}>{scorecard.summary}</p>
+                      </div>
+                    </>
+                  )}
+                  
+                  {!isGeneratingScorecard && (
+                    <button className="btn btn-primary" style={{ marginTop: '2rem', padding: '1rem 3rem' }} onClick={() => {
+                      setSessionData([]);
+                      setScorecard(null);
+                      setShowScorecardScreen(false);
+                      setQuestionIndex(0);
+                      setUserAnswer("");
+                      setFeedback("");
+                      setShowHint(false);
+                      fetchInterviewQuestions();
+                    }}>Start New Session</button>
+                  )}
                 </div>
               ) : (
                 <>
@@ -657,7 +694,7 @@ function App() {
                         onClick={() => setShowHint(true)} 
                         disabled={showHint}
                       >
-                        {"Hint 💡"}
+                        {"Structure Hint 💡"}
                       </button>
                     </div>
                   ) : (
@@ -684,9 +721,9 @@ function App() {
                           className="btn btn-primary" 
                           style={{ background: 'var(--success)' }}
                           onClick={generateScorecard}
-                          disabled={isGeneratingScorecard}
+                          
                         >
-                          {isGeneratingScorecard ? "Generating Scorecard..." : "View Performance Scorecard 📊"}
+                          "Complete Interview 📊"
                         </button>
                       )}
                     </div>
