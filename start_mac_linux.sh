@@ -7,12 +7,15 @@ echo "==================================================="
 echo ""
 
 echo "[0/3] Cleaning up old processes..."
+SHUTDOWN_TOKEN=""
 if [ -f "$HOME/Library/Application Support/GetHired/shutdown.token" ]; then
     SHUTDOWN_TOKEN=$(cat "$HOME/Library/Application Support/GetHired/shutdown.token")
 elif [ -f "$HOME/.local/share/GetHired/shutdown.token" ]; then
     SHUTDOWN_TOKEN=$(cat "$HOME/.local/share/GetHired/shutdown.token")
 fi
-curl -s -X POST http://localhost:8001/api/shutdown -H "x-shutdown-token: $SHUTDOWN_TOKEN" > /dev/null
+if [ -n "$SHUTDOWN_TOKEN" ]; then
+    curl -s -X POST http://localhost:8001/api/shutdown -H "x-shutdown-token: $SHUTDOWN_TOKEN" > /dev/null
+fi
 sleep 2
 if command -v lsof &> /dev/null; then
     lsof -ti:8001 | xargs kill -9 2>/dev/null

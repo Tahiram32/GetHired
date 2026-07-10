@@ -111,9 +111,9 @@ class TrackerJob(SQLModel, table=True):
 
 def init_db():
     SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        # Seed default columns if empty
-        if not session.exec(select(KanbanColumn)).first():
+    keys = get_keys()
+    if not keys.get("has_seeded_defaults", False):
+        with Session(engine) as session:
             defaults = [
                 KanbanColumn(name="Saved", order_index=0),
                 KanbanColumn(name="Applied", order_index=1),
@@ -123,6 +123,10 @@ def init_db():
             ]
             session.add_all(defaults)
             session.commit()
+            
+            keys["has_seeded_defaults"] = True
+            with open(CONFIG_FILE, "w") as f:
+                json.dump(keys, f)
 
 init_db()
 
