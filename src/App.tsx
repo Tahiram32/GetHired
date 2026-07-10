@@ -13,6 +13,7 @@ function App() {
   const [searchStart, setSearchStart] = useState(0);
   const [locationError, setLocationError] = useState("");
   const [roleError, setRoleError] = useState("");
+  const [pendingApply, setPendingApply] = useState<{job: any, index: number} | null>(null);
 
   const fetchJobs = async (q: string = "", l: string = "", start: number = 0) => {
     setJobsLoading(true);
@@ -325,8 +326,8 @@ function App() {
                       }}>Pass ❌</button>
                       <button className="btn btn-primary" style={{ background: 'var(--success)', boxShadow: '0 4px 14px 0 rgba(16, 185, 129, 0.4)', padding: '0.5rem 1.5rem' }} onClick={() => {
                         if (job.is_unverified) {
-                          const proceed = window.confirm("⚠️ This job could not be verified by our Anti-Scam AI.\n\nPlease proceed with caution, do not pay for equipment upfront, and verify the company independently before providing personal information.\n\nDo you want to continue to the external application?");
-                          if (!proceed) return;
+                          setPendingApply({ job, index: idx });
+                          return;
                         }
                         if (job.url) {
                           window.open(job.url, '_blank');
@@ -876,6 +877,33 @@ function App() {
           {renderContent()}
         </div>
       </main>
+      {/* Unverified Job Warning Modal */}
+      {pendingApply && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div className="glass-panel animate-fade-in" style={{ maxWidth: '500px', width: '90%', padding: '2.5rem', border: '1px solid var(--danger)', textAlign: 'center', background: 'var(--bg-secondary)' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
+            <h2 style={{ color: 'var(--danger)', marginBottom: '1rem', fontSize: '1.8rem' }}>Caution: Unverified Listing</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', lineHeight: '1.6', fontSize: '1.05rem' }}>
+              This job could not be verified by our Anti-Scam AI. Please proceed with caution, <strong>do not pay for equipment upfront</strong>, and verify the company independently before providing personal information.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexDirection: 'column' }}>
+              <button className="btn btn-primary" style={{ background: 'var(--danger)', borderColor: 'var(--danger)', padding: '0.8rem' }} onClick={() => {
+                if (pendingApply.job.url) {
+                  window.open(pendingApply.job.url, '_blank');
+                }
+                setTrackerJobs(prev => [...prev, { title: pendingApply.job.title, company: pendingApply.job.company, status: 'Applied' }]);
+                setMockJobs(prev => prev.filter((_, i) => i !== pendingApply.index));
+                setPendingApply(null);
+              }}>
+                I understand, continue to application
+              </button>
+              <button className="btn btn-secondary" style={{ padding: '0.8rem' }} onClick={() => setPendingApply(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
