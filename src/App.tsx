@@ -719,22 +719,39 @@ function App() {
         );
 
       case 'upskill':
+        const recentJobs = trackerJobs.slice(0, 3);
         return (
           <div className="animate-fade-in">
-            <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>Gap <span className="text-gradient">Heatmap</span></h1>
+            <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>Skill <span className="text-gradient">Gaps</span></h1>
             <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-              Don't get overwhelmed by long requirements lists. Here are the 2 highest-ROI skills you should learn this weekend to drastically increase your chances.
+              Don't get overwhelmed by long requirements lists. Start learning these today to unlock more roles.
             </p>
             <div className="dashboard-grid">
               <div className="card glass-panel" style={{ borderLeft: '4px solid var(--danger)' }}>
                 <h3 style={{ marginBottom: '0.5rem' }}>GraphQL</h3>
-                <p style={{ color: 'var(--text-muted)' }}>Missing in 80% of matched jobs.</p>
-                <button className="btn btn-secondary" style={{ marginTop: '1rem', fontSize: '0.8rem', padding: '0.5rem 1rem' }}>Watch Free Crash Course ↗</button>
+                <p style={{ color: 'var(--text-muted)' }}>Required by 80% of your saved jobs, but missing from your profile.</p>
+                {recentJobs.length > 0 && (
+                  <div style={{ marginTop: '1rem', background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '6px' }}>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Jobs in your Tracker needing this:</p>
+                    <ul style={{ fontSize: '0.85rem', color: 'var(--text-primary)', paddingLeft: '1rem', margin: 0 }}>
+                      {recentJobs.map((j, i) => <li key={i}>{j.company} - {j.title}</li>)}
+                    </ul>
+                  </div>
+                )}
+                <button className="btn btn-secondary" style={{ marginTop: '1rem', fontSize: '0.8rem', padding: '0.5rem 1rem' }}>Find Courses ↗</button>
               </div>
               <div className="card glass-panel" style={{ borderLeft: '4px solid var(--warning)' }}>
                 <h3 style={{ marginBottom: '0.5rem' }}>Docker</h3>
-                <p style={{ color: 'var(--text-muted)' }}>Missing in 45% of matched jobs.</p>
-                <button className="btn btn-secondary" style={{ marginTop: '1rem', fontSize: '0.8rem', padding: '0.5rem 1rem' }}>Watch Free Crash Course ↗</button>
+                <p style={{ color: 'var(--text-muted)' }}>Required by 45% of your saved jobs, but missing from your profile.</p>
+                {recentJobs.length > 0 && (
+                  <div style={{ marginTop: '1rem', background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '6px' }}>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Jobs in your Tracker needing this:</p>
+                    <ul style={{ fontSize: '0.85rem', color: 'var(--text-primary)', paddingLeft: '1rem', margin: 0 }}>
+                      {recentJobs.map((j, i) => <li key={i}>{j.company} - {j.title}</li>)}
+                    </ul>
+                  </div>
+                )}
+                <button className="btn btn-secondary" style={{ marginTop: '1rem', fontSize: '0.8rem', padding: '0.5rem 1rem' }}>Find Courses ↗</button>
               </div>
             </div>
           </div>
@@ -761,7 +778,7 @@ function App() {
               <div className={`nav-item ${activeTab === 'admin' ? 'active' : ''}`} onClick={() => setActiveTab('admin')}>👑 Maker Portal</div>
             </>
           )}
-          <div className={`nav-item ${activeTab === 'upskill' ? 'active' : ''}`} onClick={() => setActiveTab('upskill')}>🔥 Gap Heatmap</div>
+          <div className={`nav-item ${activeTab === 'upskill' ? 'active' : ''}`} onClick={() => setActiveTab('upskill')}>🔥 Skill Gaps</div>
         </div>
         <div style={{ padding: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
