@@ -50,7 +50,7 @@ Once it's ready, the app will magically pop open in your web browser at **`http:
 
 GetHired is 100% free and open-source. If this tool helped you land an interview or saved you from a scam, consider sponsoring the project to help cover development time and keep it alive!
 
-[![Sponsor](https://img.shields.io/badge/Sponsor-Tahiram28-blue?logo=paypal)](https://paypal.me/tahiram28)
+[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-Tahiram32-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/Tahiram32)
 
 ---
 
