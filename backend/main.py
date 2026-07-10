@@ -22,39 +22,6 @@ import threading
 import signal
 from fastapi import Request
 
-import secrets
-SHUTDOWN_TOKEN = secrets.token_hex(32)
-SHUTDOWN_TOKEN_FILE = os.path.join(get_app_dir(), "shutdown.token")
-with open(SHUTDOWN_TOKEN_FILE, "w") as f:
-    f.write(SHUTDOWN_TOKEN)
-
-if platform.system() == "Windows":
-    try:
-        import getpass
-        subprocess.run(['icacls', SHUTDOWN_TOKEN_FILE, '/inheritance:r', '/grant:r', f'{getpass.getuser()}:F'], check=False, capture_output=True)
-    except Exception:
-        pass
-else:
-    import stat
-    os.chmod(SHUTDOWN_TOKEN_FILE, stat.S_IRUSR | stat.S_IWUSR)
-
-@app.post("/api/shutdown")
-async def shutdown_server(request: Request, x_shutdown_token: str = Header(None)):
-    if request.client.host not in ["127.0.0.1", "localhost", "::1"]:
-        raise HTTPException(status_code=403, detail="Forbidden")
-    if x_shutdown_token != SHUTDOWN_TOKEN:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    
-    def kill_server():
-        import time
-        time.sleep(0.5)
-        if platform.system() == "Windows":
-            os.kill(os.getpid(), signal.SIGINT)
-        else:
-            os.kill(os.getpid(), signal.SIGTERM)
-            
-    threading.Thread(target=kill_server).start()
-    return {"status": "shutting down"}
 
 
 import platform
@@ -159,7 +126,40 @@ def init_db():
             with open(CONFIG_FILE, "w") as f:
                 json.dump(keys, f)
 
-init_db()
+
+import secrets
+SHUTDOWN_TOKEN = secrets.token_hex(32)
+SHUTDOWN_TOKEN_FILE = os.path.join(get_app_dir(), "shutdown.token")
+with open(SHUTDOWN_TOKEN_FILE, "w") as f:
+    f.write(SHUTDOWN_TOKEN)
+
+if platform.system() == "Windows":
+    try:
+        import getpass
+        subprocess.run(['icacls', SHUTDOWN_TOKEN_FILE, '/inheritance:r', '/grant:r', f'{getpass.getuser()}:F'], check=False, capture_output=True)
+    except Exception:
+        pass
+else:
+    import stat
+    os.chmod(SHUTDOWN_TOKEN_FILE, stat.S_IRUSR | stat.S_IWUSR)
+
+@app.post("/api/shutdown")
+async def shutdown_server(request: Request, x_shutdown_token: str = Header(None)):
+    if request.client.host not in ["127.0.0.1", "localhost", "::1"]:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    if x_shutdown_token != SHUTDOWN_TOKEN:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    def kill_server():
+        import time
+        time.sleep(0.5)
+        if platform.system() == "Windows":
+            os.kill(os.getpid(), signal.SIGINT)
+        else:
+            os.kill(os.getpid(), signal.SIGTERM)
+            
+    threading.Thread(target=kill_server).start()
+    return {"status": "shutting down"}
 
 
 def get_keys():
@@ -619,3 +619,5 @@ def health_check():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
+
+init_db()

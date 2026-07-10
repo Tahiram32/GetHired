@@ -1,1 +1,10 @@
+fastapi
+uvicorn
+pydantic
+requests
+beautifulsoup4
+python-dotenv
+openai
+pdfplumber
+sqlalchemy
 sqlmodel
