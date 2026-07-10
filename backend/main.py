@@ -195,25 +195,21 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
                 loc = item.get("location", "")
                 desc = item.get("description", "")
                 
-                # Token-Saving Utility: Strip fluff and extract requirements
-                import re
-                fluff_patterns = [r"equal opportunity.*", r"about us.*", r"about the company.*", r"what we offer.*", r"benefits.*"]
-                clean_desc = desc
-                for pattern in fluff_patterns:
-                    clean_desc = re.sub(pattern, "", clean_desc, flags=re.IGNORECASE | re.DOTALL)
-                
-                bullets = re.findall(r"(?:^|\n)\s*[-•*]\s*(.+)", clean_desc)
-                if len(bullets) > 2:
-                    snippet = " | ".join(bullets)[:800]
+                # Use SerpAPI's native pre-cleaned highlights to save OpenAI tokens
+                highlights = item.get("job_highlights", [])
+                if highlights:
+                    # Pass the structured array directly as a string to avoid token-heavy fluff
+                    snippet = str(highlights)
                 else:
-                    snippet = re.sub(r'\s+', ' ', clean_desc)[:800]
+                    # Fallback if highlights are missing, just cap the raw description safely
+                    snippet = desc[:1000] + "..."
                 
                 api_jobs.append({
                     "title": title,
                     "company": company,
                     "location": loc,
                     "url": item.get("share_link", ""),
-                    "description_snippet": snippet + "..."
+                    "description_snippet": snippet
                 })
             
             api_jobs = api_jobs[:15]
