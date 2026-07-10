@@ -13,10 +13,29 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import openai
 from openai import OpenAI
-from pydantic import BaseModel, Field
-from typing import List
+from pydantic import BaseModel, Field, field_validator, ValidationError
+import logging
+logger = logging.getLogger('api')
+from typing import List, Optional, Any
 
 app = FastAPI(title="GetHired API")
+
+class SerpApiJobValidator(BaseModel):
+    title: Optional[str] = Field(default="Unknown Title")
+    company_name: Optional[str] = Field(default="Unknown Company")
+    location: Optional[str] = Field(default="Location not listed")
+    description: Optional[str] = Field(default="No description available.")
+    share_link: Optional[str] = Field(default="")
+    job_highlights: Optional[List[Any]] = Field(default_factory=list)
+
+    @field_validator('description', mode='before')
+    @classmethod
+    def clean_description(cls, v: Any) -> str:
+        if not v:
+            return "No description available."
+        return str(v).strip()
+
+
 
 import threading
 import signal
@@ -396,13 +415,21 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
             data = res.json()
             
             for item in data.get("jobs_results", []):
-                title = item.get("title", "")
-                company = item.get("company_name", "")
-                loc = item.get("location", "")
-                desc = item.get("description", "")
+                try:
+                    # The Anti-Corruption Layer: Normalize unstructured Google JSON into strongly-typed variables
+                    validated_job = SerpApiJobValidator(**item)
+                except ValidationError as ve:
+                    logger.warning(f"Dropped malformed job due to missing critical fields: {ve}")
+                    continue
+                    
+                title = validated_job.title
+                company = validated_job.company_name
+                loc = validated_job.location
+                desc = validated_job.description
+                url_link = validated_job.share_link
                 
                 # Use SerpAPI's native pre-cleaned highlights to save OpenAI tokens
-                highlights = item.get("job_highlights", [])
+                highlights = validated_job.job_highlights
                 if highlights:
                     # Pass the structured array directly as a string to avoid token-heavy fluff
                     snippet = str(highlights)
@@ -410,7 +437,7 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
                         "title": title,
                         "company": company,
                         "location": loc,
-                        "url": item.get("share_link", ""),
+                        "url": url_link,
                         "description_snippet": snippet
                     })
                 else:
@@ -419,7 +446,7 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
                         title=title,
                         company=company,
                         location=loc,
-                        url=item.get("share_link", ""),
+                        url=url_link,
                         description=desc,
                         is_unverified=True
                     ))
