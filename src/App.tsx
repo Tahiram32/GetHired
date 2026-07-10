@@ -99,6 +99,7 @@ function App() {
     title: string; 
     company: string; 
     status: 'Applied' | 'Interviewing' | 'Offers';
+    is_unverified?: boolean;
     offerDetails?: {
       baseSalary: string;
       benefits: string;
@@ -373,7 +374,7 @@ function App() {
                       if (job.url) {
                         window.open(job.url, '_blank');
                       }
-                      setTrackerJobs(prev => [...prev, { title: job.title, company: job.company, status: 'Applied' }]);
+                      setTrackerJobs(prev => [...prev, { title: job.title, company: job.company, status: 'Applied', is_unverified: job.is_unverified }]);
                       setMockJobs(prev => prev.filter((_, i) => i !== idx));
                     }}
                   />
@@ -647,7 +648,14 @@ function App() {
                 <h3 style={{ marginBottom: '1rem' }}>Applied ({appliedJobs.length})</h3>
                 {appliedJobs.map((job, idx) => (
                   <div key={idx} className="kanban-card">
-                    <h4 style={{ marginBottom: '0.2rem' }}>{job.title}</h4>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.2rem' }}>
+                      <h4 style={{ margin: 0 }}>{job.title}</h4>
+                      {job.is_unverified && (
+                        <span style={{ fontSize: '0.6rem', padding: '0.1rem 0.3rem', borderRadius: '8px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '1px solid #f59e0b', whiteSpace: 'nowrap', fontWeight: 'bold' }} title="Caution: Unverified Listing">
+                          ⚠️ Unverified
+                        </span>
+                      )}
+                    </div>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>{job.company}</p>
                     <button className="btn btn-secondary" style={{ fontSize: '0.7rem', padding: '0.3rem 0.6rem' }} onClick={() => {
                       setTrackerJobs(prev => prev.map(j => j === job ? { ...j, status: 'Interviewing' } : j));
@@ -659,7 +667,14 @@ function App() {
                 <h3 style={{ marginBottom: '1rem' }}>Interviewing ({interviewingJobs.length})</h3>
                 {interviewingJobs.map((job, idx) => (
                   <div key={idx} className="kanban-card" style={{ borderLeft: '4px solid var(--accent-primary)' }}>
-                    <h4 style={{ marginBottom: '0.2rem' }}>{job.title}</h4>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.2rem' }}>
+                      <h4 style={{ margin: 0 }}>{job.title}</h4>
+                      {job.is_unverified && (
+                        <span style={{ fontSize: '0.6rem', padding: '0.1rem 0.3rem', borderRadius: '8px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '1px solid #f59e0b', whiteSpace: 'nowrap', fontWeight: 'bold' }} title="Caution: Unverified Listing">
+                          ⚠️ Unverified
+                        </span>
+                      )}
+                    </div>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>{job.company}</p>
                     <button className="btn btn-primary" style={{ fontSize: '0.7rem', padding: '0.3rem 0.6rem', background: 'var(--success)' }} onClick={() => {
                       setTrackerJobs(prev => prev.map(j => j === job ? { ...j, status: 'Offers' } : j));
@@ -671,7 +686,14 @@ function App() {
                 <h3 style={{ marginBottom: '1rem' }}>Offers ({offerJobs.length})</h3>
                 {offerJobs.map((job, idx) => (
                   <div key={idx} className="kanban-card" style={{ borderLeft: '4px solid var(--success)', background: 'rgba(16, 185, 129, 0.1)' }}>
-                    <h4 style={{ marginBottom: '0.2rem' }}>{job.title}</h4>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.2rem' }}>
+                      <h4 style={{ margin: 0 }}>{job.title}</h4>
+                      {job.is_unverified && (
+                        <span style={{ fontSize: '0.6rem', padding: '0.1rem 0.3rem', borderRadius: '8px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '1px solid #f59e0b', whiteSpace: 'nowrap', fontWeight: 'bold' }} title="Caution: Unverified Listing">
+                          ⚠️ Unverified
+                        </span>
+                      )}
+                    </div>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{job.company}</p>
                     
                     {job.offerDetails ? (
