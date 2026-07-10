@@ -266,6 +266,33 @@ async def get_interview_questions(role: str = "Software Engineer"):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+class CounterOfferResult(BaseModel):
+    script: str
+
+@app.post("/api/fair-pay")
+async def generate_counter_offer(offer_details: str = Form(...)):
+    if not client:
+        return {"status": "error", "message": "OpenAI client not configured."}
+    
+    system_instruction = "You are an expert career coach and salary negotiation advocate. The user will provide the details of a job offer they received, including what they are unhappy with or what the market average is. Draft a highly professional, respectful, and persuasive counter-offer email script for them. It should be confident but not arrogant, and clearly articulate their value. Only output the email script."
+    
+    try:
+        response = client.beta.chat.completions.parse(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": offer_details}
+            ],
+            response_format=CounterOfferResult,
+            temperature=0.5
+        )
+        return {
+            "status": "success",
+            "script": response.choices[0].message.parsed.script
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @app.get("/api/health")
 def health_check():
     return {"status": "healthy", "message": "GetHired Engine is running."}

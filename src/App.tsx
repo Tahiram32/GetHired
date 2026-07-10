@@ -102,6 +102,39 @@ function App() {
     }
   }, [activeTab]);
   
+  // Fair Pay Advocate State
+  const [offerText, setOfferText] = useState("");
+  const [counterScript, setCounterScript] = useState("");
+  const [isGeneratingScript, setIsGeneratingScript] = useState(false);
+
+  const handleGenerateScript = async () => {
+    if (!offerText) {
+        alert("Please paste your offer details first.");
+        return;
+    }
+    setIsGeneratingScript(true);
+    const formData = new FormData();
+    formData.append("offer_details", offerText);
+
+    try {
+      const response = await fetch("http://localhost:8001/api/fair-pay", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setCounterScript(data.script);
+      } else {
+        alert("Error: " + data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error connecting to backend.");
+    } finally {
+      setIsGeneratingScript(false);
+    }
+  };
+
   // Backend Integration State for ATS Tailorer
   const [file, setFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState("");
@@ -583,8 +616,27 @@ function App() {
             <div className="dashboard-grid">
               <div className="card glass-panel" style={{ gridColumn: 'span 2' }}>
                 <h3 style={{ marginBottom: '1rem' }}>Paste Your Offer Details</h3>
-                <textarea placeholder="e.g. They offered $110k base, no equity, but the market average is $130k..." style={{ width: '100%', height: '150px', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-highlight)', background: 'rgba(0,0,0,0.4)', color: 'white', marginBottom: '1.5rem', outline: 'none', fontFamily: 'Inter' }} />
-                <button className="btn btn-primary">Generate Respectful Counter-Offer Draft</button>
+                <textarea 
+                  placeholder="e.g. They offered $110k base, no equity, but the market average is $130k..." 
+                  style={{ width: '100%', height: '150px', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-highlight)', background: 'rgba(0,0,0,0.4)', color: 'white', marginBottom: '1.5rem', outline: 'none', fontFamily: 'Inter' }} 
+                  value={offerText}
+                  onChange={e => setOfferText(e.target.value)}
+                />
+                <button 
+                  className="btn btn-primary" 
+                  onClick={handleGenerateScript}
+                  disabled={isGeneratingScript}
+                >
+                  {isGeneratingScript ? "Generating Draft..." : "Generate Respectful Counter-Offer Draft"}
+                </button>
+                {counterScript && (
+                    <div className="animate-fade-in" style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+                        <h4 style={{ marginBottom: '1rem', color: 'var(--accent-primary)' }}>Your Counter-Offer Script</h4>
+                        <div style={{ whiteSpace: 'pre-wrap', color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                            {counterScript}
+                        </div>
+                    </div>
+                )}
               </div>
             </div>
           </div>
