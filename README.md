@@ -1,6 +1,6 @@
 # 🚀 GetHired
 
-**Welcome to GetHired!** We believe finding a job should be exciting, not exhausting. 
+**Welcome to GetHired!** I believe finding a job should be exciting, not exhausting. 
 
 If you are tired of applying to jobs only to hear nothing back, or running into fake jobs and scams online, you are in the right place. GetHired is your personal, highly intelligent career assistant. It searches the internet for real jobs, protects you from scams, tracks your applications, and even helps you tailor your resume so companies actually see it.
 
@@ -10,39 +10,34 @@ The best part? **There are no accounts, no logins, and no paywalls.** Everything
 
 ## ✨ What Can GetHired Do?
 
-1. **🕵️ Protect You From Scams:** When you search for jobs, our AI assistant automatically reads the job descriptions in the background. It filters out unpaid internships, MLMs, and ghost jobs before they even reach your screen.
-2. **📈 Track Your Progress:** The second you find a job you like and click "Apply", we automatically add it to your personal Tracker Board. You can easily drag and drop your jobs from `Applied` to `Interviewing` to `Offers`.
-3. **🪄 Rewrite Your Resume:** Just paste in the job you want and upload your resume. Our AI will tell you exactly what words to change so your resume beats the automated filters (ATS) that companies use to reject applicants.
+1. **🕵️ Protect You From Scams:** When you search for jobs, the AI assistant automatically reads the job descriptions in the background. It filters out unpaid internships, MLMs, and ghost jobs before they even reach your screen.
+2. **📈 Track Your Progress:** The second you find a job you like and click "Apply", it automatically adds it to your personal Tracker Board. You can easily drag and drop your jobs from `Applied` to `Interviewing` to `Offers`.
+3. **🪄 Rewrite Your Resume:** Just paste in the job you want and upload your resume. The AI will tell you exactly what words to change so your resume beats the automated filters (ATS) that companies use to reject applicants.
 4. **📊 Give You Real Advice:** As you apply to jobs, the app automatically tracks your callback rate and gives you honest, personalized advice on how the market is treating you.
 
 ---
 
-## 🛠️ How to Get Started (It's Easy!)
+## 🛠️ Quick Start (The "No Burden" Way)
 
-You don't need to be a software engineer to run this. Just follow these 3 simple steps:
+I built this so you don't have to install confusing software or fight with terminal commands. You can run the entire application directly in your browser.
 
-### Step 1: Download the App
-Click the green **"Code"** button at the top right of this GitHub page, and select **Download ZIP**. 
-Unzip the folder on your computer.
+### Option 1: 1-Click Cloud Setup (Recommended)
+You do not need to download or install *anything* on your computer. 
+1. Click the button below to launch a secure, free cloud environment:
+   
+   [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Tahiram32/GetHired)
+   
+2. Wait a minute for the screen to load. 
+3. Open the `backend` folder on the left side, create a file named `.env`, and paste your OpenAI key: `OPENAI_API_KEY=sk-your-key-here`
+4. Type `./run.sh` in the terminal window at the bottom of the screen and hit Enter.
 
-*(If you are familiar with the terminal, you can also run: `git clone https://github.com/Tahiram32/GetHired.git`)*
+That's it! A popup will appear with a link to your live app.
 
-### Step 2: Add Your OpenAI Key
-To make the AI work, it needs to be securely connected to your own OpenAI account.
-1. Open the folder you downloaded, and look for a folder inside it called `backend`. Open it.
-2. Inside the `backend` folder, create a brand new file and name it exactly `.env`
-3. Open that file in any text editor (like Notepad), and type: `OPENAI_API_KEY=your_key_here`
-*(You can get your key by making an account at platform.openai.com)*
-
-### Step 3: Run the App
-Open your computer's Terminal (or Command Prompt), and navigate into the `GetHired` folder. 
-Then, just type this command and press Enter:
-
-```bash
-./run.sh
-```
-
-*(Note: The very first time you do this, it might take a minute or two to download the background files it needs. You must have Node.js and Python installed on your computer.)*
+### Option 2: Local Install for Tech-Savvy Users
+If you want to run it on your own hardware, you will need [Node.js](https://nodejs.org/) and [Python 3.10+](https://www.python.org/).
+1. Download or clone this repository.
+2. Inside the `backend/` folder, create a `.env` file with your `OPENAI_API_KEY`.
+3. Open your terminal, navigate to the folder, and run: `./run.sh`
 
 Once it's ready, the app will magically pop open in your web browser at **`http://localhost:5173`**. You are ready to start finding your dream job!
 
