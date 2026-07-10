@@ -159,13 +159,9 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
             with open(db_path, "r") as f:
                 admin_jobs = json.load(f)
 
-        # Step 1: Pull live jobs from Arbeitnow API
+        # Step 1: Pull live jobs from SerpAPI Google Jobs
         api_jobs = []
         try:
-            url = "https://www.arbeitnow.com/api/job-board-api"
-            res = requests.get(url, timeout=10)
-            data = res.json()
-            
             query = q.lower()
             location = l.lower().strip()
             
@@ -173,41 +169,39 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
             if not location:
                 return {"status": "error", "message": "Backend Error: A valid Location parameter is strictly required."}
             
-            for item in data.get("data", []):
+            serpapi_key = os.getenv("SERPAPI_KEY")
+            if not serpapi_key:
+                raise Exception("SERPAPI_KEY is not configured in the environment.")
+
+            url = "https://serpapi.com/search.json"
+            params = {
+                "engine": "google_jobs",
+                "q": query,
+                "location": location,
+                "start": start,
+                "api_key": serpapi_key
+            }
+            
+            res = requests.get(url, params=params, timeout=15)
+            data = res.json()
+            
+            for item in data.get("jobs_results", []):
                 title = item.get("title", "")
                 company = item.get("company_name", "")
                 loc = item.get("location", "")
                 desc = item.get("description", "")
                 
-                title_lower = title.lower()
-                loc_lower = loc.lower()
-                
-                # 2. Hard Filter: Drop German roles and enforce US/Remote boundaries
-                if "germany" in loc_lower or "m/w/d" in title_lower or "m/f/d" in title_lower:
-                    continue
-                
-                # If they searched a specific city/state, or we are using a broad default
-                if location == "united states" or location == "remote" or location == "us":
-                    if "united states" not in loc_lower and "us" not in loc_lower.split() and "remote" not in loc_lower:
-                        continue
-                elif location not in loc_lower:
-                    continue
-                
-                # Basic pre-filter to save OpenAI tokens
-                if query and query not in title_lower and query not in desc.lower():
-                    continue
-                    
                 api_jobs.append({
                     "title": title,
                     "company": company,
                     "location": loc,
-                    "url": item.get("url", ""),
+                    "url": item.get("share_link", ""),
                     "description_snippet": desc[:400] + "..."
                 })
             
             api_jobs = api_jobs[:15]
         except Exception as e:
-            print("Arbeitnow API failed:", e)
+            print("SerpAPI failed:", e)
 
         if not api_jobs:
             raise Exception("No active jobs found matching your criteria.")
