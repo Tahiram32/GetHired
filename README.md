@@ -1,10 +1,8 @@
 # GetHired
 
-**Your personal, private, AI-powered career advocate.**
+You are more than a resume passing through an algorithm. GetHired is a free, locally-run toolkit designed to take the burnout out of your job search and put the leverage back in your hands.
 
-GetHired is a free tool designed to help you navigate a tough job market. It filters out ghost jobs, tracks your applications, helps tailor your resume to bypass automated filters, and gives you a safe space to practice for interviews.
-
-Everything runs directly on your own computer. Your data, your resume, and your interview answers never leave your machine except to be securely processed by the AI.
+Everything runs securely on your own computer. Your data, your resume, and your interview answers never leave your machine except to be processed directly by your secure API key.
 
 ---
 
