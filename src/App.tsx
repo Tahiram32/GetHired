@@ -44,6 +44,7 @@ function App() {
   const [trackerJobs, setTrackerJobs] = useState<TrackerJob[]>([]);
 
   // Interview Simulator State
+  const [interviewRole, setInterviewRole] = useState("");
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [streamActive, setStreamActive] = useState(false);
@@ -54,13 +55,15 @@ function App() {
   ]);
   const [questionsLoading, setQuestionsLoading] = useState(false);
 
-  const fetchInterviewQuestions = async () => {
+  const fetchInterviewQuestions = async (roleOverride?: string) => {
     setQuestionsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8001/api/interview-questions?role=${encodeURIComponent(searchRole || 'Software Engineer')}`);
+      const roleToUse = roleOverride || interviewRole || searchRole || 'Software Engineer';
+      const response = await fetch(`http://localhost:8001/api/interview-questions?role=${encodeURIComponent(roleToUse)}`);
       const data = await response.json();
       if (data.status === "success" && data.questions.length > 0) {
-        setInterviewQuestions(prev => prev.length === 1 && prev[0].includes("Loading") ? data.questions : [...prev, ...data.questions]);
+        setInterviewQuestions(prev => prev.length === 1 && prev[0].includes("Loading") || roleOverride ? data.questions : [...prev, ...data.questions]);
+        if (roleOverride) setQuestionIndex(0);
       }
     } catch (err) {
       console.error(err);
@@ -400,6 +403,23 @@ function App() {
             <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
               Interviewing is incredibly stressful. Practice here first to build your confidence in a safe space.
             </p>
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+              <input 
+                type="text" 
+                className="input-field" 
+                placeholder="What role are you interviewing for? (e.g. Senior Frontend Engineer)" 
+                style={{ flex: 1 }} 
+                value={interviewRole}
+                onChange={(e) => setInterviewRole(e.target.value)}
+              />
+              <button 
+                className="btn btn-primary"
+                onClick={() => fetchInterviewQuestions(interviewRole)}
+                disabled={questionsLoading}
+              >
+                {questionsLoading ? "Generating..." : "Generate Specific Questions"}
+              </button>
+            </div>
             <div className="dashboard-grid" style={{ marginTop: 0 }}>
               <div className="glass-panel" style={{ padding: '1rem', height: '400px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
                 <div style={{ background: '#000', flex: 1, borderRadius: '8px', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
