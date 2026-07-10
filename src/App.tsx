@@ -300,9 +300,9 @@ function App() {
                 ))
               ) : (
                 <div className="glass-panel job-card animate-fade-in" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-                  <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎉</div>
-                  <h2 style={{ marginBottom: '1rem' }}>You're all caught up!</h2>
-                  <p style={{ color: 'var(--text-muted)' }}>The AI is scraping the web for more matching jobs. Check back in a few hours.</p>
+                  <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📭</div>
+                  <h2 style={{ marginBottom: '1rem' }}>No active jobs found for this search.</h2>
+                  <p style={{ color: 'var(--text-muted)' }}>Check your spelling or try expanding your search area.</p>
                 </div>
               )}
             </div>
