@@ -38,6 +38,7 @@ class Job(BaseModel):
     location: str
     url: str | None = Field(None, description="The URL to the actual job application")
     description: str = Field(description="A concise 2-sentence summary of the job requirements")
+    is_unverified: bool = False
 
 class JobFilterResult(BaseModel):
     verified_jobs: list[Job] = Field(description="List of verified, non-scam jobs")
@@ -161,6 +162,7 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
 
         # Step 1: Pull live jobs from SerpAPI Google Jobs
         api_jobs = []
+        unverified_jobs = []
         try:
             query = q.lower().strip()
             location = l.lower().strip()
@@ -200,60 +202,68 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
                 if highlights:
                     # Pass the structured array directly as a string to avoid token-heavy fluff
                     snippet = str(highlights)
+                    api_jobs.append({
+                        "title": title,
+                        "company": company,
+                        "location": loc,
+                        "url": item.get("share_link", ""),
+                        "description_snippet": snippet
+                    })
                 else:
-                    # Fallback if highlights are missing, just cap the raw description safely
-                    snippet = desc[:1000] + "..."
-                
-                api_jobs.append({
-                    "title": title,
-                    "company": company,
-                    "location": loc,
-                    "url": item.get("share_link", ""),
-                    "description_snippet": snippet
-                })
+                    # Transparency Badge Fix: Skip AI filter entirely to prevent false-positive deletion
+                    unverified_jobs.append(Job(
+                        title=title,
+                        company=company,
+                        location=loc,
+                        url=item.get("share_link", ""),
+                        description=desc,
+                        is_unverified=True
+                    ))
             
             api_jobs = api_jobs[:15]
+            unverified_jobs = unverified_jobs[:5]
         except Exception as e:
             print("SerpAPI failed:", e)
 
-        if not api_jobs:
+        if not api_jobs and not unverified_jobs:
             raise Exception("No active jobs found matching your criteria.")
 
         if not client:
             raise HTTPException(status_code=500, detail="OpenAI client not initialized.")
 
-        role_target = q if q else "Job Seeker"
+        filtered_jobs = []
         
-        # Step 2: Pass through highly rigorous AI Anti-Scam Filter
-        system_instruction = f"""
-        You are a strict, world-class Anti-Scam Analyst for a premium job board. 
-        Your ONLY goal is to protect users from fake jobs, ghost jobs, MLMs, unpaid internships, "pay-to-work" schemes, and severely underpaid roles.
-        You will receive a list of raw job postings scraped from public APIs.
-
-        Rules:
-        1. Discard ANY job that mentions unpaid, equity-only, or "investment required".
-        2. Discard ANY job that looks like a ghost job (too generic, lack of real requirements).
-        3. Discard ANY job from known spammy recruitment agencies if it looks fake or lacks a real company.
-        4. For the jobs that PASS the filter, write a highly structured, beautiful 3-sentence summary of the role.
-        """
-
-        prompt = f"Raw Scraped Jobs: {json.dumps(api_jobs, indent=2)}"
-
-        response = client.beta.chat.completions.parse(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": system_instruction},
-                {"role": "user", "content": prompt}
-            ],
-            response_format=JobFilterResult,
-            temperature=0.2
-        )
-        
-        filtered_jobs = response.choices[0].message.parsed.verified_jobs
+        if api_jobs:
+            # Step 2: Pass structured jobs through highly rigorous AI Anti-Scam Filter
+            system_instruction = f"""
+            You are a strict, world-class Anti-Scam Analyst for a premium job board. 
+            Your ONLY goal is to protect users from fake jobs, ghost jobs, MLMs, unpaid internships, "pay-to-work" schemes, and severely underpaid roles.
+            You will receive a list of raw job postings scraped from public APIs.
+    
+            Rules:
+            1. Discard ANY job that mentions unpaid, equity-only, or "investment required".
+            2. Discard ANY job that looks like a ghost job (too generic, lack of real requirements).
+            3. Discard ANY job from known spammy recruitment agencies if it looks fake or lacks a real company.
+            4. For the jobs that PASS the filter, write a highly structured, beautiful 3-sentence summary of the role.
+            """
+    
+            prompt = f"Raw Scraped Jobs: {json.dumps(api_jobs, indent=2)}"
+    
+            response = client.beta.chat.completions.parse(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": system_instruction},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format=JobFilterResult,
+                temperature=0.2
+            )
+            
+            filtered_jobs = response.choices[0].message.parsed.verified_jobs
 
         return {
             "status": "success",
-            "jobs": (admin_jobs if start == 0 else []) + [j.model_dump() for j in filtered_jobs]
+            "jobs": (admin_jobs if start == 0 else []) + [j.model_dump() for j in filtered_jobs] + [j.model_dump() for j in unverified_jobs]
         }
 
     except Exception as e:

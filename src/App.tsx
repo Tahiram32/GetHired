@@ -310,7 +310,7 @@ function App() {
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.5rem' }}>
                       <h2 style={{ fontSize: '1.4rem', margin: 0 }}>{job.title}</h2>
                       {job.is_unverified && (
-                        <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.1)', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.2)', whiteSpace: 'nowrap' }} title="AI could not scan this listing for scams because the API lacked structured requirements.">
+                        <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '1px solid #f59e0b', whiteSpace: 'nowrap', fontWeight: 'bold' }} title="AI could not scan this listing for scams because the API lacked structured requirements.">
                           ⚠️ Unverified
                         </span>
                       )}
@@ -324,6 +324,10 @@ function App() {
                         setMockJobs(prev => prev.filter((_, i) => i !== idx));
                       }}>Pass ❌</button>
                       <button className="btn btn-primary" style={{ background: 'var(--success)', boxShadow: '0 4px 14px 0 rgba(16, 185, 129, 0.4)', padding: '0.5rem 1.5rem' }} onClick={() => {
+                        if (job.is_unverified) {
+                          const proceed = window.confirm("⚠️ This job could not be verified by our Anti-Scam AI.\n\nPlease proceed with caution, do not pay for equipment upfront, and verify the company independently before providing personal information.\n\nDo you want to continue to the external application?");
+                          if (!proceed) return;
+                        }
                         if (job.url) {
                           window.open(job.url, '_blank');
                         }
