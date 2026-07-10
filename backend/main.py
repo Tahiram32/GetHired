@@ -118,16 +118,24 @@ class ColumnOrderUpdate(BaseModel):
 @app.post("/api/kanban/update-column-order")
 async def update_column_order(payloads: List[ColumnOrderUpdate]):
     with Session(engine) as session:
-        # Atomic transaction to reorder all cards across multiple columns
-        for payload in payloads:
-            jobs = session.exec(select(TrackerJob).where(TrackerJob.id.in_(payload.job_ids))).all()
-            job_map = {job.id: job for job in jobs}
+        # 1. Single Flattened Read
+        all_job_ids = []
+        for p in payloads:
+            all_job_ids.extend(p.job_ids)
             
+        jobs = session.exec(select(TrackerJob).where(TrackerJob.id.in_(all_job_ids))).all()
+        
+        # 2. In-Memory Map
+        job_map = {job.id: job for job in jobs}
+        
+        # 3. In-Memory Bulk Update
+        for payload in payloads:
             for index, job_id in enumerate(payload.job_ids):
                 if job_id in job_map:
                     job_map[job_id].column_id = payload.column_id
                     job_map[job_id].order_index = index
                 
+        # 4. Single Atomic Write
         session.commit()
     return {"status": "success"}
 
