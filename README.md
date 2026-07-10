@@ -34,13 +34,14 @@ GetHired uses AI and live search data to power the app. You need to give the app
 
 ### How to set them up in the app:
 1. Open the `gethired` folder you downloaded.
-2. Create a new text file and name it exactly `.env` (don't forget the dot!).
-3. Open it in Notepad or TextEdit and paste your keys like this:
+2. Find the file named `env.example`.
+3. Open it in Notepad or TextEdit and replace the placeholder text with your actual keys:
    ```text
    OPENAI_API_KEY=sk-your_long_openai_key_here
    SERPAPI_API_KEY=your_serpapi_api_key_here
    ```
 4. Save the file.
+5. **CRITICAL STEP:** Rename the file from `env.example` to exactly `.env` (make sure there is a dot at the beginning and no `.txt` at the end).
 
 ---
 
@@ -72,6 +73,16 @@ Mac computers do not allow you to double-click these scripts by default. You nee
 The script will install everything and open the app in your browser automatically.
 
 ---
+
+
+---
+
+## 🔄 How to Update the App
+When we release new features or bug fixes, you don't want to lose your saved jobs or your API keys! To update safely:
+1. Download the newest ZIP file from GitHub and extract it into a brand new folder.
+2. Copy your `.env` file from your old folder and paste it into the new folder.
+3. (Coming Soon) If we add a database file for your saved jobs, you will copy that over as well. 
+4. Run the new `start_windows.bat` or `start_mac_linux.sh` file!
 
 ## 💡 What Can GetHired Do?
 
