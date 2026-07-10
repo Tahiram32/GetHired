@@ -627,8 +627,7 @@ class InterviewQuestionsResult(BaseModel):
 
 @app.get("/api/interview-questions")
 async def get_interview_questions(role: str = "Software Engineer"):
-    if not client:
-        return {"status": "error", "message": "OpenAI client not configured."}
+
     
     system_instruction = "You are a strict, professional hiring manager. Generate exactly 5 short, realistic interview questions for the provided role, along with a 1-sentence hint for each to help a candidate who gets stuck. Real interviews are dynamic back-and-forths. Keep each question to a single sentence or two. Make them situational and challenging."
     
