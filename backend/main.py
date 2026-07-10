@@ -37,7 +37,6 @@ class Job(BaseModel):
     company: str
     location: str
     url: str | None = Field(None, description="The URL to the actual job application")
-    matchScore: int = Field(description="A score between 75 and 99 indicating fit based on the user's master profile")
     description: str = Field(description="A concise 2-sentence summary of the job requirements")
 
 class JobFilterResult(BaseModel):
@@ -212,10 +211,7 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
         1. Discard ANY job that mentions unpaid, equity-only, or "investment required".
         2. Discard ANY job that looks like a ghost job (too generic, lack of real requirements).
         3. Discard ANY job from known spammy recruitment agencies if it looks fake or lacks a real company.
-        4. Generate a 'matchScore' between 0 and 99 based STRICTLY on how well it fits the target role: '{role_target}'.
-           - Be EXTREMELY STRICT. If the target is '{role_target}', completely unrelated roles MUST score < 10%.
-           - Only exact matches or highly relevant adjacent roles should score > 80%.
-        5. For the jobs that PASS the filter, write a highly structured, beautiful 3-sentence summary of the role.
+        4. For the jobs that PASS the filter, write a highly structured, beautiful 3-sentence summary of the role.
         """
 
         prompt = f"Raw Scraped Jobs: {json.dumps(api_jobs, indent=2)}"

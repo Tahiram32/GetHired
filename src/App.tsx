@@ -222,11 +222,6 @@ function App() {
                   <div key={idx} className="glass-panel job-card animate-fade-in" style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <h2 style={{ marginBottom: '0.5rem', fontSize: '1.4rem' }}>{job.title}</h2>
                     <h4 style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.95rem' }}>{job.company} • {job.location}</h4>
-                    <div>
-                      <div style={{ display: 'inline-block', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', padding: '0.4rem 0.8rem', borderRadius: '20px', fontWeight: 'bold', marginBottom: '1rem', fontSize: '0.85rem' }}>
-                        {job.matchScore}% Match
-                      </div>
-                    </div>
                     <div style={{ color: 'var(--text-muted)', textAlign: 'left', marginBottom: '1.5rem', whiteSpace: 'pre-line', flex: 1, maxHeight: '120px', overflowY: 'auto', paddingRight: '0.5rem', lineHeight: '1.5', fontSize: '0.9rem' }}>
                       {job.description}
                     </div>
