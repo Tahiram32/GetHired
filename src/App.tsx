@@ -631,6 +631,9 @@ function App() {
                   value={offerText}
                   onChange={e => setOfferText(e.target.value)}
                 />
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem', fontStyle: 'italic' }}>
+                  ℹ️ Your prompt is sent to OpenAI to generate this draft. Feel free to use fake company names if you want to keep your offer strictly private.
+                </p>
                 <button 
                   className="btn btn-primary" 
                   onClick={handleGenerateScript}

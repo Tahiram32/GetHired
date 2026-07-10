@@ -271,8 +271,16 @@ async def generate_counter_offer(offer_details: str = Form(...)):
     if not client:
         return {"status": "error", "message": "OpenAI client not configured."}
     
-    system_instruction = "You are an expert career coach and salary negotiation advocate. The user will provide the details of a job offer they received, including what they are unhappy with or what the market average is. Draft a highly professional, respectful, and persuasive counter-offer email script for them. It should be confident but not arrogant, and clearly articulate their value. Only output the email script."
+    system_instruction = """
+    You are an expert career coach and salary negotiation advocate. The user will provide the details of a job offer they received, including what they are unhappy with or what the market average is. 
+    Draft a highly professional, respectful, and persuasive counter-offer email script for them. 
     
+    CRITICAL TONE RULES:
+    1. NEVER sound like an AI. Do not use robotic phrases like "I hope this email finds you well", "delve into", "dynamic landscape", or "underscores".
+    2. Write like a highly competent, respectful human professional. Keep sentences relatively short and punchy.
+    3. Be confident but not arrogant. Frame the request collaboratively (e.g., "I am very excited to join, but I was hoping we could look at the base salary...").
+    4. Only output the email script itself. Do not include any meta-commentary.
+    """
     try:
         response = client.beta.chat.completions.parse(
             model="gpt-4o",
