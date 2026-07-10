@@ -414,6 +414,11 @@ function App() {
                   >
                     {isRecording ? "⏹️ Stop Recording" : "🎙️ Start Speaking"}
                   </button>
+                  {streamActive && (
+                    <button className="btn btn-secondary" onClick={stopWebcam} style={{ color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+                      🚫 Stop Camera
+                    </button>
+                  )}
                   <button className="btn btn-secondary" onClick={() => setQuestionIndex((prev) => (prev + 1) % interviewQuestions.length)}>Next Question ➡️</button>
                 </div>
               </div>
