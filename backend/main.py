@@ -407,6 +407,13 @@ async def analyze_skill_gap(payload: CoachingRequest):
     if not interview_texts and not baseline:
          raise HTTPException(status_code=400, detail="We need either some jobs in the Interviewing column or an Aspirational Baseline to compare your rejections against.")
 
+    if len(rejected_texts) < 200:
+        return CoachingInsight(
+            summary="These job descriptions lack sufficient detail for a meaningful analysis.",
+            gaps=[],
+            recommendation="Save jobs with more detailed requirement sections to get actionable insights."
+        )
+
     prompt = f"""You are an expert career coach performing a differential analysis.
 You must compare the requirements of the jobs where the user was rejected against the roles they are actively interviewing for (or their target aspirational baseline).
 You must completely ignore 'Nice to Have', 'Bonus', or 'Preferred Qualifications' sections. You must only extract hard skills from sentences that use absolute terminology like 'Must have', 'Required', 'X+ years of experience in', or 'Minimum qualifications'.
