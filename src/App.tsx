@@ -348,8 +348,65 @@ function App() {
     }
   };
 
+
+  const [settingsSerp, setSettingsSerp] = useState("");
+  const [settingsOpenAI, setSettingsOpenAI] = useState("");
+  const [settingsSaved, setSettingsSaved] = useState(false);
+
+  React.useEffect(() => {
+    if (activeTab === 'settings') {
+      fetch("http://localhost:8001/api/config")
+        .then(r => r.json())
+        .then(data => {
+            if (data.has_serpapi) setSettingsSerp("********");
+            if (data.has_openai) setSettingsOpenAI("********");
+        })
+        .catch(e => console.error(e));
+    }
+  }, [activeTab]);
+
+  const saveSettings = async () => {
+    const payload: any = {};
+    if (settingsSerp && settingsSerp !== "********") payload.serpapi_key = settingsSerp;
+    if (settingsOpenAI && settingsOpenAI !== "********") payload.openai_key = settingsOpenAI;
+    
+    await fetch("http://localhost:8001/api/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+    setSettingsSaved(true);
+    setTimeout(() => setSettingsSaved(false), 2000);
+  };
+
   const renderContent = () => {
+
     switch (activeTab) {
+      case 'settings':
+        return (
+          <div className="tab-content glass-panel animate-fade-in" style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left' }}>
+            <h1 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>⚙️ API Settings</h1>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+              GetHired uses your personal API keys to fetch jobs and power the AI. These keys are securely stored locally on your hard drive.
+            </p>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>SerpAPI Key (Google Jobs)</label>
+              <input type="password" value={settingsSerp} onChange={e => setSettingsSerp(e.target.value)} className="glass-input" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px' }} placeholder="sk_..." />
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Get yours for free at serpapi.com</div>
+            </div>
+
+            <div style={{ marginBottom: '2rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>OpenAI Key (GPT-4o)</label>
+              <input type="password" value={settingsOpenAI} onChange={e => setSettingsOpenAI(e.target.value)} className="glass-input" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px' }} placeholder="sk-..." />
+            </div>
+
+            <button className="btn btn-primary" style={{ width: '100%', padding: '1rem', background: settingsSaved ? 'var(--success)' : 'var(--primary)', color: 'white' }} onClick={saveSettings}>
+              {settingsSaved ? "✅ Saved Successfully!" : "Save Keys Securely"}
+            </button>
+          </div>
+        );
+
       
       case 'feed':
         return (
@@ -1089,6 +1146,7 @@ case 'kanban':
           <div className={`nav-item ${activeTab === 'kanban' ? 'active' : ''}`} onClick={() => setActiveTab('kanban')}>📊 Tracker Board</div>
           <div className={`nav-item ${activeTab === 'interview' ? 'active' : ''}`} onClick={() => setActiveTab('interview')}>🤖 Interview Prep</div>
           <div className={`nav-item ${activeTab === 'salary' ? 'active' : ''}`} onClick={() => setActiveTab('salary')}>💰 Fair Pay Advocate</div>
+          <div className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>⚙️ Settings</div>
           {window.location.search.includes('makerMode=true') && (
             <>
               <div style={{ marginTop: '2rem', padding: '0 1.5rem', fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Creator Tools</div>
