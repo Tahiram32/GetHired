@@ -160,43 +160,42 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
             with open(db_path, "r") as f:
                 admin_jobs = json.load(f)
 
-        # Step 1: Pull live remote software dev jobs from LinkedIn
-        linkedin_jobs = []
+        # Step 1: Pull live jobs from Arbeitnow API
+        api_jobs = []
         try:
-            query = urllib.parse.quote(q)
-            loc = f"&location={urllib.parse.quote(l)}" if l else ""
-            url = f"https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords={query}{loc}&start={start}"
-            res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
-            soup = BeautifulSoup(res.text, "html.parser")
-            job_lis = soup.find_all("li")[:25]  # Take top 25
+            url = "https://www.arbeitnow.com/api/job-board-api"
+            res = requests.get(url, timeout=10)
+            data = res.json()
             
-            def fetch_job_details(j):
-                title_elem = j.find("h3")
-                company_elem = j.find("h4")
-                loc_elem = j.find("span", class_="job-search-card__location")
-                a_tag = j.find("a", class_="base-card__full-link")
+            query = q.lower()
+            location = l.lower()
+            
+            for item in data.get("data", []):
+                title = item.get("title", "")
+                company = item.get("company_name", "")
+                loc = item.get("location", "")
+                desc = item.get("description", "")
                 
-                if not (title_elem and company_elem and a_tag):
-                    return None
+                # Basic pre-filter to save OpenAI tokens
+                if query and query not in title.lower() and query not in desc.lower():
+                    continue
+                if location and location not in loc.lower():
+                    continue
                     
-                job_url = a_tag["href"]
-                    
-                return {
-                    "title": title_elem.text.strip(),
-                    "company": company_elem.text.strip(),
-                    "location": loc_elem.text.strip() if loc_elem else "Unknown",
-                    "url": job_url,
-                    "description_snippet": "Full description available on posting."
-                }
-
-            with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
-                results = list(executor.map(fetch_job_details, job_lis))
-                linkedin_jobs = [res for res in results if res is not None]
+                api_jobs.append({
+                    "title": title,
+                    "company": company,
+                    "location": loc,
+                    "url": item.get("url", ""),
+                    "description_snippet": desc[:400] + "..."
+                })
+            
+            api_jobs = api_jobs[:15]
         except Exception as e:
-            print("LinkedIn scrape failed:", e)
+            print("Arbeitnow API failed:", e)
 
-        if not linkedin_jobs:
-            raise Exception("No jobs found from LinkedIn.")
+        if not api_jobs:
+            raise Exception("No active jobs found matching your criteria.")
 
         if not client:
             raise HTTPException(status_code=500, detail="OpenAI client not initialized.")
@@ -207,17 +206,19 @@ async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
         system_instruction = f"""
         You are a strict, world-class Anti-Scam Analyst for a premium job board. 
         Your ONLY goal is to protect users from fake jobs, ghost jobs, MLMs, unpaid internships, "pay-to-work" schemes, and severely underpaid roles.
-        You will receive a list of raw job postings scraped directly from LinkedIn.
+        You will receive a list of raw job postings scraped from public APIs.
 
         Rules:
         1. Discard ANY job that mentions unpaid, equity-only, or "investment required".
         2. Discard ANY job that looks like a ghost job (too generic, lack of real requirements).
         3. Discard ANY job from known spammy recruitment agencies if it looks fake or lacks a real company.
-        4. For the jobs that PASS the filter, write a highly structured, beautiful 3-sentence summary of the role.
-        5. Generate a 'matchScore' between 50 and 99 based on how well it fits a '{role_target}'. DO NOT discard legitimate jobs simply because they are in a different industry or don't match the tech sector.
+        4. Generate a 'matchScore' between 0 and 99 based STRICTLY on how well it fits the target role: '{role_target}'.
+           - Be EXTREMELY STRICT. If the target is '{role_target}', completely unrelated roles MUST score < 10%.
+           - Only exact matches or highly relevant adjacent roles should score > 80%.
+        5. For the jobs that PASS the filter, write a highly structured, beautiful 3-sentence summary of the role.
         """
 
-        prompt = f"Raw Scraped Jobs: {json.dumps(linkedin_jobs, indent=2)}"
+        prompt = f"Raw Scraped Jobs: {json.dumps(api_jobs, indent=2)}"
 
         response = client.beta.chat.completions.parse(
             model="gpt-4o",

@@ -251,8 +251,11 @@ function App() {
         return (
           <div className="animate-fade-in">
             <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>Live <span className="text-gradient">Job Feed</span></h1>
-            <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+            <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
               Scan through scraped jobs matched against your Master Profile.
+            </p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem', fontStyle: 'italic' }}>
+              ℹ️ Hitting "Search" triggers a fresh, real-time scrape across external job boards.
             </p>
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
               <input 
