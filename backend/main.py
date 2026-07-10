@@ -78,6 +78,19 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
 
+class SkillGap(BaseModel):
+    skill_name: str = Field(..., description="The specific hard skill missing")
+    importance: str = Field(..., description="High/Medium/Low based on frequency in target roles")
+    reasoning: str = Field(..., description="Brief, one-sentence evidence from user's rejected roles")
+
+class CoachingInsight(BaseModel):
+    summary: str = Field(..., description="A 1-sentence takeaway of the user's current status")
+    gaps: List[SkillGap] = Field(..., description="List of actionable technical gaps")
+    recommendation: str = Field(..., description="The single most important action for this weekend")
+
+class CoachingRequest(BaseModel):
+    aspirational_baseline: Optional[str] = None
+
 class KanbanColumn(SQLModel, table=True):
     __tablename__ = "kanban_columns"
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -369,6 +382,56 @@ async def post_admin_job(job: Job):
         return {"status": "success", "message": "Job successfully added to the global feed!"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+@app.post("/api/analysis/skill-gap")
+async def analyze_skill_gap(payload: CoachingRequest):
+    with Session(engine) as session:
+        rejected_col = session.exec(select(KanbanColumn).where(KanbanColumn.name == "Rejected")).first()
+        if not rejected_col:
+            raise HTTPException(status_code=400, detail="Rejected column not found")
+            
+        rejected_jobs = session.exec(select(TrackerJob).where(TrackerJob.column_id == rejected_col.id)).all()
+        if not rejected_jobs:
+            return CoachingInsight(summary="You have no rejected jobs yet. Keep applying!", gaps=[], recommendation="Apply to more jobs.")
+
+        interview_col = session.exec(select(KanbanColumn).where(KanbanColumn.name == "Interviewing")).first()
+        interview_jobs = []
+        if interview_col:
+            interview_jobs = session.exec(select(TrackerJob).where(TrackerJob.column_id == interview_col.id)).all()
+
+    rejected_texts = "\n\n".join([j.description for j in rejected_jobs])
+    interview_texts = "\n\n".join([j.description for j in interview_jobs]) if interview_jobs else ""
+    
+    baseline = payload.aspirational_baseline if payload.aspirational_baseline else ""
+
+    if not interview_texts and not baseline:
+         raise HTTPException(status_code=400, detail="We need either some jobs in the Interviewing column or an Aspirational Baseline to compare your rejections against.")
+
+    prompt = f"""You are an expert career coach performing a differential analysis.
+You must compare the requirements of the jobs where the user was rejected against the roles they are actively interviewing for (or their target aspirational baseline).
+You must completely ignore 'Nice to Have', 'Bonus', or 'Preferred Qualifications' sections. You must only extract hard skills from sentences that use absolute terminology like 'Must have', 'Required', 'X+ years of experience in', or 'Minimum qualifications'.
+
+[REJECTED JOB DESCRIPTIONS]
+{rejected_texts}
+"""
+    if interview_texts:
+        prompt += f"\n[INTERVIEWING JOB DESCRIPTIONS]\n{interview_texts}\n"
+    if baseline:
+        prompt += f"\n[ASPIRATIONAL BASELINE ROLE]\n{baseline}\n"
+
+    try:
+        response = get_openai_client().beta.chat.completions.parse(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a career coach. Return the JSON object following the strict schema."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format=CoachingInsight
+        )
+        return response.choices[0].message.parsed
+    except Exception as e:
+        logger.error(f"Failed to generate coaching insight: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate coaching insight")
 
 @app.get("/api/jobs")
 async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
