@@ -44,7 +44,7 @@ source venv/bin/activate
 echo "- Installing required files..."
 pip install -r requirements.txt > /dev/null
 echo "- Waking up the AI..."
-uvicorn main:app --host 0.0.0.0 --port 8001 --proxy-headers --forwarded-allow-ips="*" > /dev/null 2>&1 &
+uvicorn main:app --host 0.0.0.0 --port 8001 > /dev/null 2>&1 &
 BACKEND_PID=$!
 cd .. || exit
 
