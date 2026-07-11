@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request, Header
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import pdfplumber
 import os
@@ -204,22 +204,32 @@ async def shutdown_server(request: Request, x_shutdown_token: str = Header(None)
     return {"status": "shutting down"}
 
 
-def get_keys():
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, "r") as f:
-            return json.load(f)
-    return {}
+load_dotenv()
+
+from time import time
+from collections import defaultdict
+from fastapi import Request, Depends
+
+RATE_LIMIT = 10
+RATE_LIMIT_WINDOW = 3600
+ip_requests = defaultdict(list)
+
+def check_rate_limit(request: Request):
+    ip = request.client.host
+    now = time()
+    ip_requests[ip] = [t for t in ip_requests[ip] if now - t < RATE_LIMIT_WINDOW]
+    if len(ip_requests[ip]) >= RATE_LIMIT:
+        raise HTTPException(status_code=429, detail="Rate limit exceeded. Try again later.")
+    ip_requests[ip].append(now)
 
 def get_openai_client():
-    keys = get_keys()
-    api_key = keys.get("openai_key")
+    api_key = os.getenv("MASTER_OPENAI_KEY")
     if not api_key:
         raise HTTPException(status_code=400, detail="OpenAI API key not configured")
     return OpenAI(api_key=api_key)
 
 def get_serpapi_key():
-    keys = get_keys()
-    api_key = keys.get("serpapi_key")
+    api_key = os.getenv("MASTER_SERPAPI_KEY")
     if not api_key:
         raise HTTPException(status_code=400, detail="SerpAPI key not configured")
     return api_key
@@ -454,7 +464,7 @@ You must completely ignore 'Nice to Have', 'Bonus', or 'Preferred Qualifications
         raise HTTPException(status_code=500, detail="Failed to generate coaching insight")
 
 @app.post("/api/resume/optimize")
-async def optimize_resume(file: UploadFile = File(...), skill_gaps: str = Form(...)):
+async def optimize_resume(req: Request, _=Depends(check_rate_limit), file: UploadFile = File(...), skill_gaps: str = Form(...)):
     try:
         with pdfplumber.open(file.file) as pdf:
             resume_text = "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
@@ -494,7 +504,7 @@ You must strictly limit the use of adjectives. Do NOT use corporate buzzwords or
         raise HTTPException(status_code=500, detail="Failed to optimize resume.")
 
 @app.get("/api/jobs")
-async def get_live_jobs(q: str = "", l: str = "", start: int = 0):
+async def get_live_jobs(request: Request, q: str = "", l: str = "", start: int = 0, _=Depends(check_rate_limit)):
     """
     Pulls live jobs from the global Admin JSON DB, plus an open API (Remotive), and passes them through an AI Scam-Filter.
     """
@@ -634,7 +644,7 @@ class InterviewQuestionsResult(BaseModel):
     questions: List[QuestionObj]
 
 @app.get("/api/interview-questions")
-async def get_interview_questions(role: str = "Software Engineer"):
+async def get_interview_questions(req: Request, role: str = "Software Engineer", _=Depends(check_rate_limit)):
 
     
     system_instruction = "You are a strict, professional hiring manager. Generate exactly 5 short, realistic interview questions for the provided role, along with a 1-sentence hint for each to help a candidate who gets stuck. Real interviews are dynamic back-and-forths. Keep each question to a single sentence or two. Make them situational and challenging."

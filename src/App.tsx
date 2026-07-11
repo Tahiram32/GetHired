@@ -1199,7 +1199,7 @@ case 'kanban':
           <div className={`nav-item ${activeTab === 'kanban' ? 'active' : ''}`} onClick={() => setActiveTab('kanban')}>📊 Tracker Board</div>
           <div className={`nav-item ${activeTab === 'interview' ? 'active' : ''}`} onClick={() => setActiveTab('interview')}>🤖 Interview Prep</div>
           <div className={`nav-item ${activeTab === 'salary' ? 'active' : ''}`} onClick={() => setActiveTab('salary')}>💰 Fair Pay Advocate</div>
-          <div className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>⚙️ Settings</div>
+          
           {window.location.search.includes('makerMode=true') && (
             <>
               <div style={{ marginTop: '2rem', padding: '0 1.5rem', fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Creator Tools</div>
