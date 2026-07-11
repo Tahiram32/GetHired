@@ -69,14 +69,27 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine
 from typing import Optional
 
-sqlite_url = f"sqlite:///{DB_FILE}"
-engine = create_engine(sqlite_url, connect_args={"check_same_thread": False})
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-@event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
+if DATABASE_URL:
+    # Production: PostgreSQL with Connection Pooling
+    engine = create_engine(
+        DATABASE_URL, 
+        pool_size=20, 
+        max_overflow=10,
+        pool_pre_ping=True
+    )
+else:
+    # Local Development: SQLite
+    sqlite_url = f"sqlite:///{DB_FILE}"
+    engine = create_engine(sqlite_url, connect_args={"check_same_thread": False})
+    
+    @event.listens_for(Engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        if "sqlite" in str(dbapi_connection.__class__).lower():
+            cursor = dbapi_connection.cursor()
+            cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.close()
 
 class SkillGap(BaseModel):
     skill_name: str = Field(..., description="The specific hard skill missing")
