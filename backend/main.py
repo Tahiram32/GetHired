@@ -67,6 +67,7 @@ DB_FILE = os.path.join(get_app_dir(), "gethired.db")
 from sqlmodel import create_engine, SQLModel, Session, Field, select
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
+from sqlalchemy.pool import NullPool
 from typing import Optional
 
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -75,9 +76,7 @@ if DATABASE_URL:
     # Production: PostgreSQL with Connection Pooling
     engine = create_engine(
         DATABASE_URL, 
-        pool_size=20, 
-        max_overflow=10,
-        pool_pre_ping=True
+        poolclass=NullPool
     )
 else:
     # Local Development: SQLite

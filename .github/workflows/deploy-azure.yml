@@ -1,0 +1,48 @@
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PYTHON_VERSION: '3.11'
+  AZURE_WEBAPP_NAME: 'gethired-app'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+
+      # When Alembic is fully scaffolded, we will uncomment this step to run migrations before swap
+      # - name: Run Alembic Database Migrations
+      #   env:
+      #     DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      #   run: cd backend && alembic upgrade head
+
+      - name: Build frontend
+        run: |
+          npm install
+          npm run build
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: .
