@@ -215,12 +215,7 @@ RATE_LIMIT_WINDOW = 3600
 ip_requests = defaultdict(list)
 
 def check_rate_limit(request: Request):
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        ip = forwarded.split(",")[0].strip()
-    else:
-        ip = request.client.host
-    
+    ip = request.client.host
     now = time()
     ip_requests[ip] = [t for t in ip_requests[ip] if now - t < RATE_LIMIT_WINDOW]
     if len(ip_requests[ip]) >= RATE_LIMIT:
