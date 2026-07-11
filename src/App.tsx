@@ -72,6 +72,7 @@ function App() {
   const [locationError, setLocationError] = useState("");
   const [roleError, setRoleError] = useState("");
   const [missingSerpKeyError, setMissingSerpKeyError] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const fetchJobs = async (q: string = "", l: string = "", start: number = 0) => {
     setJobsLoading(true);
@@ -99,9 +100,7 @@ function App() {
     }
   };
 
-  React.useEffect(() => {
-    fetchJobs(searchRole, searchLoc);
-  }, []);
+
   // Tracker State
   type TrackerJob = { 
     title: string; 
@@ -486,6 +485,7 @@ function App() {
                     setRoleError("");
                     setLocationError("");
                     setSearchStart(0);
+                    setHasSearched(true);
                     fetchJobs(searchRole, searchLoc, 0);
                   }
                 }}
@@ -509,6 +509,7 @@ function App() {
                     setRoleError("");
                     setLocationError("");
                     setSearchStart(0);
+                    setHasSearched(true);
                     fetchJobs(searchRole, searchLoc, 0);
                 }}
               />
@@ -526,6 +527,7 @@ function App() {
                   setRoleError("");
                   setLocationError("");
                   setSearchStart(0);
+                  setHasSearched(true);
                   fetchJobs(searchRole, searchLoc, 0);
                 }}
                 style={{ padding: '0.8rem 2rem' }}
@@ -571,8 +573,14 @@ function App() {
                     }}
                   />
                 ))
+              ) : !hasSearched ? (
+                <div className="glass-panel job-card animate-fade-in" style={{ textAlign: 'center', padding: '4rem 2rem', gridColumn: '1 / -1' }}>
+                  <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🔍</div>
+                  <h2 style={{ marginBottom: '1rem' }}>Ready to Scan</h2>
+                  <p style={{ color: 'var(--text-muted)' }}>Enter a role and location above to begin scanning for jobs.</p>
+                </div>
               ) : (
-                <div className="glass-panel job-card animate-fade-in" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+                <div className="glass-panel job-card animate-fade-in" style={{ textAlign: 'center', padding: '4rem 2rem', gridColumn: '1 / -1' }}>
                   <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📭</div>
                   <h2 style={{ marginBottom: '1rem' }}>No active jobs found for this search.</h2>
                   <p style={{ color: 'var(--text-muted)' }}>Check your spelling or try expanding your search area.</p>
