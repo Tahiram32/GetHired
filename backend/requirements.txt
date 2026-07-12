@@ -11,3 +11,4 @@ sqlmodel
 pyodbc
 alembic
 python-multipart
+gunicorn
