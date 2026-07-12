@@ -791,7 +791,6 @@ def health_check():
     return {"status": "healthy", "message": "GetHired Engine is running."}
 
 if __name__ == "__main__":
+    init_db()
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
-
-init_db()
