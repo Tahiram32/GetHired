@@ -8,3 +8,5 @@ openai
 pdfplumber
 sqlalchemy
 sqlmodel
+pyodbc
+alembic
