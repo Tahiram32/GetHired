@@ -7,7 +7,7 @@ on:
 
 env:
   PYTHON_VERSION: '3.11'
-  AZURE_WEBAPP_NAME: 'gethired-app'
+  AZURE_WEBAPP_NAME: 'gethired-tahira-2026'
 
 jobs:
   build-and-deploy:
