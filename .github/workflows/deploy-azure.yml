@@ -32,10 +32,10 @@ jobs:
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
 
-      - name: Run Alembic Database Migrations
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: cd backend && alembic upgrade head
+      # - name: Run Alembic Database Migrations
+      #   env:
+      #     DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      #   run: cd backend && alembic upgrade head
 
       - name: Build frontend
         run: |
