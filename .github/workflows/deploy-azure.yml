@@ -32,10 +32,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r backend/requirements.txt
 
-      - name: Run Alembic Database Migrations
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: cd backend && alembic upgrade head
+      # - name: Run Alembic Database Migrations
+      #   env:
+      #     DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      #   run: cd backend && alembic upgrade head
 
       - name: Build frontend
         run: |
